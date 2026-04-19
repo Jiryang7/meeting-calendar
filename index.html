@@ -361,29 +361,33 @@ function isPre(m){return !m.resultStatus;}
 
 /* ═══ STATE ═══ */
 let db={meetings:[]};
-let purposeMap={}; // raw purpose → canonical
-let stageOrder=[]; // 사용자가 지정한 단계 표시 순서
+let purposeMap={};
+let stageOrder=[];
 let curRegion='전체',curView='list';
 let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
 let selMon=null;
 let weekStart=weekOf(new Date()),selWk=null;
 let activeFilter=null;
-let adminAuth=false; // 관리자 인증 여부 (세션 내 유지)
+let adminAuth=false;
 
-const ADMIN_PASS='1234'; // ← 관리자 비밀번호 (여기서 변경하세요)
+const ADMIN_PASS='1234'; // ← 관리자 비밀번호
+
+/* ── GEMINI API KEY ── */
+function getApiKey(){return localStorage.getItem('mtg-gemini-key')||'';}
+function setApiKey(k){localStorage.setItem('mtg-gemini-key',k);}
 
 function weekOf(d){const r=new Date(d);r.setHours(0,0,0,0);r.setDate(r.getDate()-r.getDay());return r;}
 
-/* ═══ STORAGE ═══ */
-async function load(){
+/* ═══ STORAGE (localStorage) ═══ */
+function load(){
   try{
-    const r=await window.storage.get('mtg-v5');
-    if(r&&r.value){const saved=JSON.parse(r.value);db=saved.db||{meetings:[]};purposeMap=saved.purposeMap||{};stageOrder=saved.stageOrder||[];}
+    const raw=localStorage.getItem('mtg-v5');
+    if(raw){const saved=JSON.parse(raw);db=saved.db||{meetings:[]};purposeMap=saved.purposeMap||{};stageOrder=saved.stageOrder||[];}
   }catch(_){}
   render();
 }
-async function save(){
-  try{await window.storage.set('mtg-v5',JSON.stringify({db,purposeMap,stageOrder}));}catch(_){}
+function save(){
+  try{localStorage.setItem('mtg-v5',JSON.stringify({db,purposeMap,stageOrder}));}catch(_){}
 }
 
 /* ═══ PURPOSE RESOLUTION ═══ */
@@ -451,10 +455,12 @@ async function doParseAdd(){
   const btn=document.getElementById('parseBtn'),lbl=document.getElementById('parseBtnTxt'),err=document.getElementById('errBox');
   err.style.display='none';btn.disabled=true;lbl.innerHTML='<span class="spin"></span> 분석 중...';
   const now=new Date(),y=now.getFullYear(),mo=now.getMonth()+1,d=now.getDate();
-  try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,
-        system:`현재: ${y}년 ${mo}월 ${d}일. 순수 JSON만 반환. 코드블록·설명 절대 금지.
+  const apiKey=getApiKey();
+  if(!apiKey){
+    err.textContent='Gemini API 키가 없습니다. 🔒 관리 탭에서 키를 입력해 주세요. (aistudio.google.com 무료 발급)';
+    err.style.display='block';btn.disabled=false;lbl.textContent='AI 분석 후 추가';return;
+  }
+  const systemPrompt=`현재: ${y}년 ${mo}월 ${d}일. 순수 JSON만 반환. 코드블록·설명 절대 금지.
 
 [핵심 개념]
 - confirmStatus(만남 전): 🔴=미확티 🟡=전티완료 🟢=확티
@@ -464,20 +470,15 @@ async function doParseAdd(){
 [파싱 규칙]
 1. 헤더: "#[지역명]지역 만남캘린더" → region
 2. 날짜: "📅 N월 N일" → ${y}년 기준 YYYY-MM-DD
-3. 단계/목적줄: "➖[내용]" → purpose (이 단계 아래 만남들의 purpose)
-4. 만남줄 슬래시 구분:
-   기본 형식: 이모지 + 시간/연령/단계코드/방식/이름들
-   이모지 없는 경우: 🔴로 처리 (미확티)
-   - 슬래시 개수 파악:
-     4개(시간/연령/방식/이름[/목적]): stage=null, method=3번째, people=4번째
-     5개(시간/연령/단계코드/방식/이름): stage=3번째, method=4번째, people=5번째
-   - 단계코드 예: B, D1, D2, C, CH, H (짧은 코드면 stage)
-   - 이름: 하이픈으로 연결된 이름들
-   - 시간: "시간미정"이거나 없으면 null
+3. 단계/목적줄: "➖[내용]" → purpose
+4. 만남줄: 이모지 + 시간/연령/단계코드/방식/이름들
+   - 5개 슬래시: stage=3번째, method=4번째, people=5번째
+   - 4개 슬래시: stage=null, method=3번째, people=4번째
+   - 단계코드: B, D1, D2, C, CH, H 등 짧은 코드
+   - 시간 없으면 null
 5. 대괄호[] → nextMeeting. 🍀⭕ → note
-6. 이모지 판별:
-   결과이모지(🎉✔️✅🎵🔺❌🚫) → resultStatus 설정, confirmStatus="확티"
-   확인이모지(🔴🟡🟢) → confirmStatus만, resultStatus=null
+6. 이모지: 결과이모지(🎉✔️✅🎵🔺❌🚫)→resultStatus+confirmStatus="확티"
+         확인이모지(🔴🟡🟢)→confirmStatus만, resultStatus=null
 
 반환: {"region":"지역명","meetings":[{
   "date":"YYYY-MM-DD","stage":"단계코드 or null","purpose":"➖줄 내용",
@@ -486,11 +487,18 @@ async function doParseAdd(){
   "confirmStatus":"확티|전티완료|미확티 or null",
   "resultStatus":"단계향상|단계유지|만남중|연기|탈락전|탈락후 or null",
   "nextMeeting":"텍스트 or null","note":"메모 or null"
-}]}`,
-        messages:[{role:'user',content:txt}]})});
+}]}`;
+  try{
+    const resp=await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({
+         contents:[{parts:[{text:systemPrompt+'\n\n아래 텍스트를 파싱하세요:\n'+txt}]}],
+         generationConfig:{temperature:0,maxOutputTokens:4000}
+       })});
     const data=await resp.json();
-    if(data.error)throw new Error(data.error.message);
-    const raw=data.content[0].text.trim().replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'');
+    if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
+    const raw=data.candidates[0].content.parts[0].text.trim().replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'');
     const parsed=JSON.parse(raw);
     const {added,updated}=mergeIn(parsed.region||'미분류',parsed.meetings||[]);
     await save();document.getElementById('txtInput').value='';
@@ -1147,6 +1155,21 @@ function renderSettings(){
       <div class="settings-card-body" style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-danger" onclick="doClear()">전체 데이터 초기화</button>
         <span style="font-size:12px;color:var(--t3);align-self:center">총 ${db.meetings.length}건 저장됨</span>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-hdr">
+        <div><div class="sc-title">🔑 Gemini API 키 (무료)</div>
+        <div class="sc-sub">AI 분석 기능에 필요합니다. <a href="https://aistudio.google.com" target="_blank" style="color:var(--acc-dk)">aistudio.google.com</a>에서 발급</div></div>
+      </div>
+      <div class="settings-card-body" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input type="password" id="apiKeyInput" value="${getApiKey()}"
+          placeholder="AIzaSy..."
+          style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;font-size:12px;font-family:'DM Mono',monospace;outline:none;color:var(--t1)"
+          onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bd)'">
+        <button class="btn btn-acc" onclick="setApiKey(document.getElementById('apiKeyInput').value);showToast('API 키 저장됨')">저장</button>
+        ${getApiKey()?`<span style="font-size:11px;color:var(--cf-ok);font-weight:600">✓ 설정됨</span>`:`<span style="font-size:11px;color:var(--r-dp);font-weight:600">미설정</span>`}
       </div>
     </div>`;
 }
