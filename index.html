@@ -492,8 +492,8 @@ function parseStructured(txt){
   const hdr=lines[0].match(/(.+개강)\s*[\/\s]\s*(.+지역)/);
   if(hdr){region=hdr[2].replace('지역','').trim();startIdx=1;}
 
-  // 컬럼 헤더 행 건너뛰기
-  if(lines[startIdx]&&/^타겟|^청년|^장년/.test(lines[startIdx])&&lines[startIdx].includes('단계'))startIdx++;
+  // 컬럼 헤더 행 건너뛰기 (실제 헤더 텍스트 포함 시에만)
+  if(lines[startIdx]&&lines[startIdx].includes('섭-인-교')&&lines[startIdx].includes('만남목적'))startIdx++;
 
   const meetings=[];
   for(let i=startIdx;i<lines.length;i++){
