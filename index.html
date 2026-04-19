@@ -307,27 +307,18 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <button class="btn btn-sm" onclick="closeModal()">✕</button>
     </div>
     <div class="legend">
-      <div class="leg-section">만남 전 (확인티켓)</div>
-      <span style="color:var(--cf-un)">🔴 미확티</span>
-      <span style="color:var(--cf-pt)">🟡 전티완료</span>
-      <span style="color:var(--cf-ok)">🟢 확티</span>
-      <div class="leg-section">만남 결과</div>
-      <span>🎉 단계향상</span><span>✔️ 단계유지</span><span>🎵 만남중</span>
-      <span>🔺 연기</span><span>❌ 탈락전</span><span>🚫 탈락후</span>
-      <div class="leg-section" style="margin-top:2px;color:var(--acc-dk)">형식: 🔴시간/연령/단계/방식/이름1-이름2-이름3</div>
+      <div class="leg-section">📋 구조화 형식 (API 불필요 — 권장)</div>
+      <span style="color:var(--t1);font-size:11px">N월 개강/OO지역</span>
+      <span style="color:var(--t2);font-size:10px">시간/타겟/단계/섭외방식/섭-인-교/최근만남일/만남목적/만남결과/다음만남일/다음시간/다음목적</span>
+      <div class="leg-section" style="margin-top:4px">만남결과 값: 미확티 · 전티 · 확티 · 단계향상 · 만남유지 · 만남전탈락 · 만남후탈락</div>
+      <div class="leg-section" style="margin-top:4px;color:var(--t3)">📌 이모지 형식(🔴🎉 등)도 지원 — API 키 필요</div>
     </div>
-    <textarea id="txtInput" placeholder="⏰43.04.14(화) | 4월개강 #명동지역 만남캘린더
-
-📅 4월 19일 (토)
-➖영따기 예정
-🔴19:00/청년/B/통신/이우진-송하신-동민지
-🔴20:30/청년/B/노방/김윤서-신주영-송승우
-🟢19:00/청년/D2/지인/김도-전영-류인
-🎉19:00/청년/CH/노방/강수-최성-엄수
-
-📅 4월 20일 (일)
-➖복음방
-🔴시간미정/청년/D2/통신/김태희-권은재-김명선"></textarea>
+    <textarea id="txtInput" placeholder="4월 개강/명동지역
+타겟/단계/섭외방식/섭-인-교/최근만남일/만남목적/만남결과/다음만남일/만남시간/다음만남목적/확티체크
+청년/D2/노방/황인국-양재준-김예인/4.17/복음방/단계향상/4.19/14:00/복음방/미확티
+청년/B/노방/황인국-양재준-김예인/4.19/복음방/단계향상/4.26/14:00/복음방굳히기/미확티
+청년/B/노방/황인국-양재준-한성현/4.26/복음방굳히기/만남유지/4.27/14:00/복음방3회차/미확티">
+    </textarea>
     <div class="err-box" id="errBox"></div>
     <div class="modal-acts">
       <button class="btn" onclick="closeModal()" style="max-width:88px">취소</button>
@@ -407,9 +398,11 @@ function sortGroups(groups){
   });
 }
 
-/* ═══ DEDUP KEY ═══ */
-function mkey(m){return `${m.date}|${(m.people||'').replace(/[-\s]/g,'').toLowerCase()}`;}
-
+/* ═══ DEDUP KEY — 섭+인 2명만 (교 변경 허용) ═══ */
+function mkey(m){
+  const parts=(m.people||'').replace(/\s/g,'').toLowerCase().split('-').filter(Boolean);
+  return `${m.date}|${parts.slice(0,2).join('-')}`;
+}
 /* ═══ MERGE ═══ */
 function mergeIn(region,meetings){
   let added=0,updated=0;
@@ -435,7 +428,10 @@ function mergeIn(region,meetings){
       if(!ex.resultStatus&&(CF_RANK[inc.confirmStatus]||0)>(CF_RANK[ex.confirmStatus]||0)){
         ex.confirmStatus=inc.confirmStatus;changed=true;
       }
-      if(inc.stage&&inc.stage!==ex.stage&&(R_RANK[inc.resultStatus]||0)>=(R_RANK[ex.resultStatus]||0)){ex.stage=inc.stage;changed=true;}
+      // stage: 기존에 값 없으면 새 보고서 값으로 채움, 있으면 유지
+      if(inc.stage&&!ex.stage){ex.stage=inc.stage;changed=true;}
+      // 교(3번째 사람) 변경 허용
+      if(inc.people&&inc.people!==ex.people){ex.people=inc.people;changed=true;}
       if(inc.purpose&&inc.purpose!==ex.purpose){}// purpose는 덮어쓰지 않음 (매핑 우선)
       if(inc.nextMeeting){ex.nextMeeting=inc.nextMeeting;changed=true;}
       if(inc.note){ex.note=inc.note;changed=true;}
@@ -448,64 +444,168 @@ function mergeIn(region,meetings){
   return {added,updated};
 }
 
-/* ═══ PARSE ═══ */
+/* ═══ PARSE DATE HELPER ═══ */
+function parseKorDate(raw){
+  if(!raw)return null;
+  raw=raw.trim();
+  const today=new Date();
+  const y=today.getFullYear();
+  if(raw==='오늘')return today.toISOString().slice(0,10);
+  if(raw==='내일'){const d=new Date(today);d.setDate(d.getDate()+1);return d.toISOString().slice(0,10);}
+  if(raw==='모레'){const d=new Date(today);d.setDate(d.getDate()+2);return d.toISOString().slice(0,10);}
+  // M.D / M/D / M월D일
+  const m=raw.match(/^(\d{1,2})[./월](\d{1,2})/);
+  if(m)return `${y}-${String(+m[1]).padStart(2,'0')}-${String(+m[2]).padStart(2,'0')}`;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw))return raw;
+  return null;
+}
+
+function mapResultText(raw){
+  if(!raw)return{confirmStatus:'미확티',resultStatus:null};
+  const r=raw.trim();
+  if(/단계.?향상|향상/.test(r))return{confirmStatus:'확티',resultStatus:'단계향상'};
+  if(/만남.?유지|단계.?유지|유지/.test(r))return{confirmStatus:'확티',resultStatus:'단계유지'};
+  if(/만남.?중/.test(r))return{confirmStatus:'확티',resultStatus:'만남중'};
+  if(/연기/.test(r))return{confirmStatus:'확티',resultStatus:'연기'};
+  if(/만남.?전.?탈락|탈락.?전/.test(r))return{confirmStatus:null,resultStatus:'탈락전'};
+  if(/만남.?후.?탈락|탈락.?후/.test(r))return{confirmStatus:'확티',resultStatus:'탈락후'};
+  if(/확티/.test(r))return{confirmStatus:'확티',resultStatus:null};
+  if(/전티/.test(r))return{confirmStatus:'전티완료',resultStatus:null};
+  if(/미확티/.test(r))return{confirmStatus:'미확티',resultStatus:null};
+  return{confirmStatus:'미확티',resultStatus:null};
+}
+
+/* ── 구조화 형식 감지 (슬래시 7개 이상 행이 있으면) ── */
+function isStructured(txt){
+  return txt.split('\n').some(l=>l.trim().split('/').length>=7 && !/^[📅➖🔴🟡🟢🎉✔✅🎵🔺❌🚫]/.test(l.trim()));
+}
+
+/* ── 구조화 형식 파싱 (AI 없이 JS로) ──
+   헤더: N월 개강/OO지역
+   컬럼: 타겟/단계/섭외방식/섭-인-교/최근만남일/만남목적/만남결과/다음만남일/만남시간/다음만남목적/확티체크
+*/
+function parseStructured(txt){
+  const lines=txt.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+  let region='미분류',startIdx=0;
+
+  // 헤더: "4월 개강/명동지역"
+  const hdr=lines[0].match(/(.+개강)\s*[\/\s]\s*(.+지역)/);
+  if(hdr){region=hdr[2].replace('지역','').trim();startIdx=1;}
+
+  // 컬럼 헤더 행 건너뛰기
+  if(lines[startIdx]&&/^타겟|^청년|^장년/.test(lines[startIdx])&&lines[startIdx].includes('단계'))startIdx++;
+
+  const meetings=[];
+  for(let i=startIdx;i<lines.length;i++){
+    const line=lines[i];
+    if(!line||line.startsWith('//'))continue;
+    const p=line.split('/');
+    if(p.length<6)continue;
+
+    // 타겟/단계/방식/섭-인-교/최근만남일/만남목적/만남결과/다음만남일/만남시간/다음만남목적/확티체크
+    const ageGroup  =p[0]?.trim()||null;
+    const stage     =p[1]?.trim()||null;
+    const method    =p[2]?.trim()||null;
+    const people    =p[3]?.trim()||null;
+    const dateRaw   =p[4]?.trim()||null;
+    const purpose   =p[5]?.trim()||null;
+    const resultRaw =p[6]?.trim()||null;
+    const nextDateRaw=p[7]?.trim()||null;
+    const nextTime  =p[8]?.trim()||null;
+    const nextPurpose=p[9]?.trim()||null;
+    const nextCfRaw =p[10]?.trim()||null;
+
+    const date=parseKorDate(dateRaw);
+    if(!date||!people)continue;
+
+    const{confirmStatus:curCf,resultStatus}=mapResultText(resultRaw);
+    // 결과가 있으면 현재 만남은 확티 확정
+    const confirmStatus=resultStatus?'확티':curCf;
+
+    // 다음만남 표시용 텍스트
+    let nextMeeting=null;
+    const ndParts=[];
+    if(nextDateRaw)ndParts.push(nextDateRaw);
+    if(nextTime)ndParts.push(nextTime);
+    if(nextPurpose)ndParts.push(nextPurpose);
+    if(ndParts.length)nextMeeting=ndParts.join(' ');
+
+    /* ① 현재 만남 레코드 */
+    meetings.push({
+      date,stage,purpose,time:null,
+      ageGroup,method,people,
+      confirmStatus,resultStatus,
+      nextMeeting,note:null
+    });
+
+    /* ② 다음 만남 레코드 자동 생성 */
+    if(nextDateRaw&&nextDateRaw.trim()){
+      const futureDate=parseKorDate(nextDateRaw.trim());
+      if(futureDate&&futureDate!==date){
+        const{confirmStatus:futureCf}=mapResultText(nextCfRaw||'미확티');
+        meetings.push({
+          date:futureDate,
+          stage,                      // 현재 보고 기준 단계
+          purpose:nextPurpose||null,
+          time:nextTime&&nextTime!=='시간미정'?nextTime:null,
+          ageGroup,method,people,
+          confirmStatus:futureCf||'미확티',
+          resultStatus:null,
+          nextMeeting:null,
+          note:null
+        });
+      }
+    }
+  }
+  return{region,meetings};
+}
+
+/* ═══ PARSE + ADD ═══ */
 async function doParseAdd(){
   const txt=document.getElementById('txtInput').value.trim();
   if(!txt)return;
   const btn=document.getElementById('parseBtn'),lbl=document.getElementById('parseBtnTxt'),err=document.getElementById('errBox');
   err.style.display='none';btn.disabled=true;lbl.innerHTML='<span class="spin"></span> 분석 중...';
-  const now=new Date(),y=now.getFullYear(),mo=now.getMonth()+1,d=now.getDate();
-  const apiKey=getApiKey();
-  if(!apiKey){
-    err.textContent='Gemini API 키가 없습니다. 🔒 관리 탭에서 키를 입력해 주세요. (aistudio.google.com 무료 발급)';
-    err.style.display='block';btn.disabled=false;lbl.textContent='AI 분석 후 추가';return;
-  }
-  const systemPrompt=`현재: ${y}년 ${mo}월 ${d}일. 순수 JSON만 반환. 코드블록·설명 절대 금지.
 
-[핵심 개념]
-- confirmStatus(만남 전): 🔴=미확티 🟡=전티완료 🟢=확티
-- resultStatus(만남 결과): 🎉=단계향상 ✔️=단계유지 ✅=단계유지 🎵=만남중 🔺=연기 ❌=탈락전 🚫=탈락후
-- 미래 예정 만남: confirmStatus만 있고 resultStatus는 null
-
-[파싱 규칙]
-1. 헤더: "#[지역명]지역 만남캘린더" → region
-2. 날짜: "📅 N월 N일" → ${y}년 기준 YYYY-MM-DD
-3. 단계/목적줄: "➖[내용]" → purpose
-4. 만남줄: 이모지 + 시간/연령/단계코드/방식/이름들
-   - 5개 슬래시: stage=3번째, method=4번째, people=5번째
-   - 4개 슬래시: stage=null, method=3번째, people=4번째
-   - 단계코드: B, D1, D2, C, CH, H 등 짧은 코드
-   - 시간 없으면 null
-5. 대괄호[] → nextMeeting. 🍀⭕ → note
-6. 이모지: 결과이모지(🎉✔️✅🎵🔺❌🚫)→resultStatus+confirmStatus="확티"
-         확인이모지(🔴🟡🟢)→confirmStatus만, resultStatus=null
-
-반환: {"region":"지역명","meetings":[{
-  "date":"YYYY-MM-DD","stage":"단계코드 or null","purpose":"➖줄 내용",
-  "time":"HH:MM or null","ageGroup":"청년 등","method":"노방 등",
-  "people":"이름1-이름2-이름3",
-  "confirmStatus":"확티|전티완료|미확티 or null",
-  "resultStatus":"단계향상|단계유지|만남중|연기|탈락전|탈락후 or null",
-  "nextMeeting":"텍스트 or null","note":"메모 or null"
-}]}`;
   try{
-    const resp=await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-      {method:'POST',headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({
-         contents:[{parts:[{text:systemPrompt+'\n\n아래 텍스트를 파싱하세요:\n'+txt}]}],
-         generationConfig:{temperature:0,maxOutputTokens:4000}
-       })});
-    const data=await resp.json();
-    if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
-    const raw=data.candidates[0].content.parts[0].text.trim().replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'');
-    const parsed=JSON.parse(raw);
-    const {added,updated}=mergeIn(parsed.region||'미분류',parsed.meetings||[]);
-    await save();document.getElementById('txtInput').value='';
+    let parsed;
+
+    if(isStructured(txt)){
+      /* 구조화 형식 → JS 직접 파싱 (API 불필요) */
+      lbl.innerHTML='<span class="spin"></span> 파싱 중...';
+      parsed=parseStructured(txt);
+    } else {
+      /* 이모지 형식 → Gemini API 호출 */
+      const apiKey=getApiKey();
+      if(!apiKey){
+        err.textContent='이모지 형식은 Gemini API 키가 필요합니다. 🔒 관리 탭에서 입력해주세요.\n구조화 형식(슬래시 구분)은 API 없이 바로 사용 가능합니다.';
+        err.style.display='block';btn.disabled=false;lbl.textContent='분석 후 추가';return;
+      }
+      const now=new Date(),y=now.getFullYear(),mo=now.getMonth()+1,d=now.getDate();
+      const prompt=`현재:${y}년${mo}월${d}일. JSON만 반환. 코드블록금지.
+이모지→confirmStatus: 🔴=미확티 🟡=전티완료 🟢=확티
+이모지→resultStatus: 🎉=단계향상 ✔️=단계유지 ✅=단계유지 🎵=만남중 🔺=연기 ❌=탈락전 🚫=탈락후
+헤더"#XX지역"→region. 날짜"📅N월N일"→${y}년YYYY-MM-DD. "➖내용"→purpose.
+만남줄: 이모지+시간/연령/단계/방식/이름들(하이픈구분). 슬래시5개=단계있음,4개=단계null.
+결과이모지→resultStatus+confirmStatus="확티". 확인이모지→confirmStatus만.
+반환:{"region":"","meetings":[{"date":"","stage":null,"purpose":"","time":null,"ageGroup":"","method":"","people":"","confirmStatus":null,"resultStatus":null,"nextMeeting":null,"note":null}]}
+텍스트: ${txt}`;
+      const resp=await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0,maxOutputTokens:2000}})});
+      const data=await resp.json();
+      if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
+      const raw=data.candidates[0].content.parts[0].text.trim().replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'');
+      parsed=JSON.parse(raw);
+    }
+
+    const{added,updated}=mergeIn(parsed.region||'미분류',parsed.meetings||[]);
+    save();document.getElementById('txtInput').value='';
     closeModal();render();
     showToast(`신규 ${added}건 추가 · ${updated}건 업데이트`);
   }catch(e){err.textContent='파싱 오류: '+e.message;err.style.display='block';}
-  finally{btn.disabled=false;lbl.textContent='AI 분석 후 추가';}
+  finally{btn.disabled=false;lbl.textContent='분석 후 추가';}
 }
 
 async function doClear(){if(!confirm('모든 데이터 삭제?'))return;db={meetings:[]};purposeMap={};await save();render();closeModal();}
