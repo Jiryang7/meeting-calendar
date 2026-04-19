@@ -341,19 +341,34 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <span class="modal-title">만남 현황 붙여넣기</span>
       <button class="btn btn-sm" onclick="closeModal()">✕</button>
     </div>
-    <div class="legend">
-      <div class="leg-section">📋 구조화 형식 (API 불필요 — 권장)</div>
-      <span style="color:var(--t1);font-size:11px">N월 개강/OO지역</span>
-      <span style="color:var(--t2);font-size:10px">타겟/단계/섭외방식/섭-인-교/최근만남일/만남목적/만남결과/다음만남일/만남시간/다음만남목적/확티체크</span>
-      <div class="leg-section" style="margin-top:4px">만남결과 값: 미확티 · 전티 · 확티 · 단계향상 · 만남유지 · 만남전탈락 · 만남후탈락</div>
-      <div class="leg-section" style="margin-top:4px;color:var(--t3)">📌 이모지 형식(🔴🎉 등)도 지원 — API 키 필요</div>
+    <!-- 개강 + 지역 선택 (관리자 페이지에서만 추가 가능) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px">개강 선택</div>
+        <select id="sel-cohort" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 11px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--t1);outline:none;cursor:pointer"
+          onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bd)'">
+          <option value="">-- 개강 선택 --</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px">지역 선택</div>
+        <select id="sel-region" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 11px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--t1);outline:none;cursor:pointer"
+          onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bd)'">
+          <option value="">-- 지역 선택 --</option>
+        </select>
+      </div>
     </div>
-    <textarea id="txtInput" placeholder="4월 개강/명동지역
-타겟/단계/섭외방식/섭-인-교/최근만남일/만남목적/만남결과/다음만남일/만남시간/다음만남목적/확티체크
-청년/D2/노방/황인국-양재준-김예인/4.17/복음방/단계향상/4.19/14:00/복음방/미확티
+
+    <!-- 입력 형식 안내 -->
+    <div style="background:var(--acc-lt);border:1px solid var(--acc-md);border-radius:8px;padding:9px 12px;font-size:11px;line-height:1.8">
+      <strong style="color:var(--acc-tx)">입력 형식:</strong>
+      <span style="color:var(--t2)">타겟/단계/섭외방식/섭-인-교/최근만남일/만남목적/만남결과/다음만남일/만남시간/다음만남목적/확티체크</span><br>
+      <span style="color:var(--t3)">만남결과: 미확티 · 전티 · 확티 · 단계향상 · 만남유지 · 만남전탈락 · 만남후탈락</span>
+    </div>
+
+    <textarea id="txtInput" placeholder="청년/D2/노방/황인국-양재준-김예인/4.17/복음방/단계향상/4.19/14:00/복음방/미확티
 청년/B/노방/황인국-양재준-김예인/4.19/복음방/단계향상/4.26/14:00/복음방굳히기/미확티
-청년/B/노방/황인국-양재준-한성현/4.26/복음방굳히기/만남유지/4.27/14:00/복음방3회차/미확티">
-    </textarea>
+청년/B/노방/황인국-양재준-한성현/4.26/복음방굳히기/만남유지/4.27/14:00/복음방3회차/미확티" style="min-height:200px"></textarea>
     <div class="err-box" id="errBox"></div>
     <div class="modal-acts">
       <button class="btn" onclick="closeModal()" style="max-width:88px">취소</button>
@@ -395,8 +410,10 @@ let selMon=null;
 let weekStart=weekOf(new Date()),selWk=null;
 let activeFilter=null;
 let adminAuth=false;
-let curCohort='전체'; // 개강 필터
-let curAdminView='settings'; // admin 서브뷰: settings|edit
+let curCohort='전체';
+let curAdminView='settings';
+let regionList=[]; // 지역 목록 (관리자 수정 가능)
+let cohortList=[]; // 개강 목록
 
 const ADMIN_PASS='1234'; // ← 관리자 비밀번호
 
@@ -416,7 +433,7 @@ async function load(){
   try{
     // 먼저 로컬 캐시로 빠르게 표시
     const cache=localStorage.getItem('mtg-cache');
-    if(cache){const s=JSON.parse(cache);db=s.db||{meetings:[]};purposeMap=s.purposeMap||{};stageOrder=s.stageOrder||[];}
+    if(cache){const s=JSON.parse(cache);db=s.db||{meetings:[]};purposeMap=s.purposeMap||{};stageOrder=s.stageOrder||[];regionList=s.regionList||[];cohortList=s.cohortList||[];}
     render();
     // 그다음 Supabase에서 최신 데이터 가져오기
     const resp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${SB_ID}&select=data`,{headers:SB_HDR});
@@ -426,14 +443,16 @@ async function load(){
       db=saved.db||{meetings:[]};
       purposeMap=saved.purposeMap||{};
       stageOrder=saved.stageOrder||[];
-      localStorage.setItem('mtg-cache',JSON.stringify({db,purposeMap,stageOrder}));
+      regionList=saved.regionList||[];
+      cohortList=saved.cohortList||[];
+      localStorage.setItem('mtg-cache',JSON.stringify({db,purposeMap,stageOrder,regionList,cohortList}));
       render();
     }
   }catch(e){console.warn('load error:',e);}
 }
 
 async function save(){
-  const payload={db,purposeMap,stageOrder};
+  const payload={db,purposeMap,stageOrder,regionList,cohortList};
   // 로컬 캐시 즉시 저장
   localStorage.setItem('mtg-cache',JSON.stringify(payload));
   try{
@@ -557,6 +576,10 @@ function parseStructured(txt){
   const hdr=lines[0].match(/(.+개강)\s*[\/\s]\s*(.+지역)/);
   let cohort='미분류';
   if(hdr){cohort=hdr[1].replace(/\s/g,'');region=hdr[2].replace('지역','').trim();startIdx=1;}
+  else{
+    // 헤더 없으면 첫 줄이 데이터 — selects에서 받은 값 사용
+    cohort=''; region=''; // doParseAdd에서 override됨
+  }
 
   // 컬럼 헤더 행 건너뛰기 (실제 헤더 텍스트 포함 시에만)
   if(lines[startIdx]&&lines[startIdx].includes('섭-인-교')&&lines[startIdx].includes('만남목적'))startIdx++;
@@ -630,6 +653,10 @@ function parseStructured(txt){
 async function doParseAdd(){
   const txt=document.getElementById('txtInput').value.trim();
   if(!txt)return;
+  const selCohort=document.getElementById('sel-cohort')?.value||'';
+  const selRegion=document.getElementById('sel-region')?.value||'';
+  if(!selCohort){alert('개강을 선택해주세요');return;}
+  if(!selRegion){alert('지역을 선택해주세요');return;}
   const btn=document.getElementById('parseBtn'),lbl=document.getElementById('parseBtnTxt'),err=document.getElementById('errBox');
   err.style.display='none';btn.disabled=true;lbl.innerHTML='<span class="spin"></span> 분석 중...';
 
@@ -666,7 +693,10 @@ async function doParseAdd(){
       parsed=JSON.parse(raw);
     }
 
-    const{added,updated}=mergeIn(parsed.region||'미분류',parsed.meetings||[]);
+    // selRegion/selCohort override parsed values
+    if(selRegion)parsed.region=selRegion;
+    if(selCohort)(parsed.meetings||[]).forEach(m=>m.cohort=selCohort);
+    const{added,updated}=mergeIn(parsed.region||selRegion||'미분류',parsed.meetings||[]);
     save();document.getElementById('txtInput').value='';
     closeModal();render();
     showToast(`신규 ${added}건 추가 · ${updated}건 업데이트`);
@@ -1332,6 +1362,51 @@ function renderSettings(){
 
     <div class="settings-card">
       <div class="settings-card-hdr">
+        <div>
+          <div class="sc-title">지역 관리</div>
+          <div class="sc-sub">지역 이름을 추가·수정·삭제합니다</div>
+        </div>
+        <button class="btn btn-sm btn-acc" onclick="addRegionFromSettings()" style="margin-left:auto">+ 추가</button>
+      </div>
+      <div class="settings-card-body" style="padding:0">
+        <div id="regionListEl">
+          ${(()=>{
+            const all=[...new Set([...regionList,...db.meetings.map(m=>m.region).filter(Boolean)])].sort();
+            if(!all.length)return '<div class="no-purposes">아직 지역 데이터가 없습니다</div>';
+            return all.map((r,i)=>`
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--bd)">
+                <input value="${r}" id="reg-inp-${i}"
+                  style="flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'Noto Sans KR',sans-serif;outline:none;color:var(--t1)"
+                  onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bd)'">
+                <button class="btn btn-sm" onclick="renameRegion('${r}',document.getElementById('reg-inp-${i}').value)">저장</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteRegion('${r}')">삭제</button>
+              </div>`).join('');
+          })()}
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-hdr">
+        <div>
+          <div class="sc-title">개강 관리</div>
+          <div class="sc-sub">개강 목록을 추가·삭제합니다</div>
+        </div>
+        <button class="btn btn-sm btn-acc" onclick="addCohortFromSettings()" style="margin-left:auto">+ 추가</button>
+      </div>
+      <div class="settings-card-body">
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${getActiveCohorts().map(co=>`
+            <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:20px;font-size:12px;font-weight:500">
+              ${co}
+              <button onclick="deleteCohort('${co}')" style="background:none;border:none;cursor:pointer;color:var(--t3);font-size:12px;line-height:1;padding:0 2px">✕</button>
+            </div>`).join('')||'<span style="font-size:12px;color:var(--t3)">없음</span>'}
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-hdr">
         <div class="sc-title">데이터 관리</div>
       </div>
       <div class="settings-card-body" style="display:flex;gap:10px;flex-wrap:wrap">
@@ -1357,6 +1432,43 @@ function renderSettings(){
 }
 
 function updatePurposeMap(raw,val){purposeMap[raw]=val.trim()||raw;}
+
+function renameRegion(oldName,newName){
+  newName=newName.trim();
+  if(!newName||newName===oldName)return;
+  // update all meetings
+  db.meetings.forEach(m=>{if(m.region===oldName)m.region=newName;});
+  // update regionList
+  const i=regionList.indexOf(oldName);
+  if(i>=0)regionList[i]=newName;
+  else regionList=regionList.filter(r=>r!==oldName);
+  if(!regionList.includes(newName))regionList.push(newName);
+  save();renderSettings();showToast(`${oldName} → ${newName} 변경됨`);
+}
+function deleteRegion(name){
+  if(!confirm(`"${name}" 지역을 목록에서 삭제할까요?\n(만남 데이터는 유지됩니다)`))return;
+  regionList=regionList.filter(r=>r!==name);
+  save();renderSettings();showToast(`${name} 삭제됨`);
+}
+function addRegionFromSettings(){
+  const v=prompt('새 지역 이름 입력');
+  if(!v||!v.trim())return;
+  const name=v.trim();
+  if(!regionList.includes(name))regionList.push(name);
+  save();renderSettings();
+}
+function addCohortFromSettings(){
+  const v=prompt('새 개강 이름 입력 (예: 5월개강)');
+  if(!v||!v.trim())return;
+  const name=v.trim();
+  if(!cohortList.includes(name))cohortList.push(name);
+  save();renderSettings();
+}
+function deleteCohort(name){
+  if(!confirm(`"${name}"을 개강 목록에서 삭제할까요?\n(만남 데이터는 유지됩니다)`))return;
+  cohortList=cohortList.filter(c=>c!==name);
+  save();renderSettings();showToast(`${name} 삭제됨`);
+}
 function resetPurposeMap(raw){purposeMap[raw]=raw;renderSettings();}
 
 function moveStage(idx,dir){
@@ -1542,8 +1654,43 @@ function saveEditModal(idx){
 
 let originalAdminHTML='';
 
+/* ════════════
+   MODAL HELPERS
+════════════ */
+function getActiveCohorts(){
+  // 데이터에서 수집 + cohortList 합치기 (중복 제거, 정렬)
+  const fromData=[...new Set(db.meetings.map(m=>m.cohort).filter(Boolean))];
+  const all=[...new Set([...cohortList,...fromData])];
+  return all.sort((a,b)=>{
+    const na=parseInt(a)||0,nb=parseInt(b)||0;
+    return nb-na;
+  });
+}
+function getActiveRegions(){
+  const fromData=[...new Set(db.meetings.map(m=>m.region).filter(Boolean))];
+  return [...new Set([...regionList,...fromData])].sort();
+}
+
+function populateSelects(){
+  const cs=document.getElementById('sel-cohort');
+  const rs=document.getElementById('sel-region');
+  if(!cs||!rs)return;
+  const cohorts=getActiveCohorts();
+  const regions=getActiveRegions();
+  const prevC=cs.value, prevR=rs.value;
+  cs.innerHTML='<option value="">-- 개강 선택 --</option>'+cohorts.map(c=>`<option value="${c}">${c}</option>`).join('');
+  rs.innerHTML='<option value="">-- 지역 선택 --</option>'+regions.map(r=>`<option value="${r}">${r}</option>`).join('');
+  // 현재 필터와 같은 항목 기본 선택
+  if(curCohort!=='전체')cs.value=curCohort;
+  else if(prevC)cs.value=prevC;
+  if(curRegion!=='전체')rs.value=curRegion;
+  else if(prevR)rs.value=prevR;
+}
+
+// 개강/지역 추가는 관리자 페이지에서만 가능
+
 /* ═══ MODAL ═══ */
-function openModal(){document.getElementById('overlay').classList.remove('hidden');document.getElementById('dataInfo').textContent=`저장: ${db.meetings.length}건`;}
+function openModal(){document.getElementById('overlay').classList.remove('hidden');document.getElementById('dataInfo').textContent=`저장: ${db.meetings.length}건`;setTimeout(populateSelects,50);}
 function closeModal(){document.getElementById('overlay').classList.add('hidden');document.getElementById('errBox').style.display='none';}
 function bgClose(e){if(e.target===document.getElementById('overlay'))closeModal();}
 
