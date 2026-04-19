@@ -406,16 +406,43 @@ function setApiKey(k){localStorage.setItem('mtg-gemini-key',k);}
 
 function weekOf(d){const r=new Date(d);r.setHours(0,0,0,0);r.setDate(r.getDate()-r.getDay());return r;}
 
-/* ═══ STORAGE (localStorage) ═══ */
-function load(){
+/* ═══ STORAGE (Supabase) ═══ */
+const SB_URL='https://zjkrvkaakrhaptwbqfzo.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpqa3J2a2Fha3JoYXB0d2JxZnpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1ODc0MjgsImV4cCI6MjA5MjE2MzQyOH0.UQwt3pagP8D7BJKfyr8LDeb3XytYVYU8t6YLvkoGOWw';
+const SB_ID='00000000-0000-0000-0000-000000000001';
+const SB_HDR={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+async function load(){
   try{
-    const raw=localStorage.getItem('mtg-v5');
-    if(raw){const saved=JSON.parse(raw);db=saved.db||{meetings:[]};purposeMap=saved.purposeMap||{};stageOrder=saved.stageOrder||[];}
-  }catch(_){}
-  render();
+    // 먼저 로컬 캐시로 빠르게 표시
+    const cache=localStorage.getItem('mtg-cache');
+    if(cache){const s=JSON.parse(cache);db=s.db||{meetings:[]};purposeMap=s.purposeMap||{};stageOrder=s.stageOrder||[];}
+    render();
+    // 그다음 Supabase에서 최신 데이터 가져오기
+    const resp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${SB_ID}&select=data`,{headers:SB_HDR});
+    const rows=await resp.json();
+    if(rows&&rows[0]&&rows[0].data){
+      const saved=rows[0].data;
+      db=saved.db||{meetings:[]};
+      purposeMap=saved.purposeMap||{};
+      stageOrder=saved.stageOrder||[];
+      localStorage.setItem('mtg-cache',JSON.stringify({db,purposeMap,stageOrder}));
+      render();
+    }
+  }catch(e){console.warn('load error:',e);}
 }
-function save(){
-  try{localStorage.setItem('mtg-v5',JSON.stringify({db,purposeMap,stageOrder}));}catch(_){}
+
+async function save(){
+  const payload={db,purposeMap,stageOrder};
+  // 로컬 캐시 즉시 저장
+  localStorage.setItem('mtg-cache',JSON.stringify(payload));
+  try{
+    await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${SB_ID}`,{
+      method:'PATCH',
+      headers:{...SB_HDR,'Prefer':'return=minimal'},
+      body:JSON.stringify({data:payload})
+    });
+  }catch(e){console.warn('save error:',e);}
 }
 
 /* ═══ PURPOSE RESOLUTION ═══ */
