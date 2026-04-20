@@ -87,6 +87,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <input id="s-name" type="text" placeholder="홍길동" autocomplete="username">
     </div>
     <div class="field">
+      <label>소속 지역</label>
+      <select id="s-region" style="width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;color:var(--t1);outline:none;transition:border-color .13s;cursor:pointer"
+        onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bd)'">
+        <option value="">-- 지역 선택 --</option>
+      </select>
+    </div>
+    <div class="field">
       <label>비밀번호 설정</label>
       <input id="s-pass" type="password" placeholder="8자 이상" autocomplete="new-password">
     </div>
@@ -127,6 +134,23 @@ function switchTab(t){
   document.getElementById('form-login').style.display=t==='login'?'':'none';
   document.getElementById('form-signup').style.display=t==='signup'?'':'none';
   hideErr();
+  if(t==='signup') loadRegionsForSignup();
+}
+async function loadRegionsForSignup(){
+  try{
+    const resp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.00000000-0000-0000-0000-000000000001&select=data`,{headers:HDR});
+    const rows=await resp.json();
+    const data=rows?.[0]?.data||{};
+    let encrypted=data.encrypted;
+    let regionList=data.regionList||[];
+    // encrypted 포맷이면 regionList는 별도로 저장 안 되므로 빈 배열
+    // admin이 등록한 regionList 사용
+    if(data.regionList) regionList=data.regionList;
+    const sel=document.getElementById('s-region');
+    if(!sel)return;
+    sel.innerHTML='<option value="">-- 지역 선택 --</option>'+
+      regionList.map(r=>`<option value="${r}">${r}</option>`).join('');
+  }catch(e){console.warn(e);}
 }
 function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';}
 function hideErr(){['l-err','s-err','s-ok'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});}
@@ -198,10 +222,11 @@ async function doSignup(){
 
     // 비밀번호 해시 후 등록
     const hash=await hashPassword(name,pass);
+    const region=document.getElementById('s-region')?.value||'';
     const regResp=await fetch(`${SB_URL}/rest/v1/users`,{
       method:'POST',
       headers:{...HDR,'Prefer':'return=minimal'},
-      body:JSON.stringify({name,password_hash:hash})
+      body:JSON.stringify({name,password_hash:hash,region})
     });
 
     if(!regResp.ok){const e=await regResp.text();throw new Error(e);}
