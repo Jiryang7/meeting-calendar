@@ -1717,13 +1717,13 @@ function renderSidebar(){
     h+=`<button class="sb-admin-item ${curView==='edit'?'active':''}" onclick="setView('edit')">
       <span>✏️</span><span>만남 수정·삭제</span>
     </button>`;
-    h+=`<button class="sb-admin-item ${curView==='settings'?'active':''}" onclick="setView('settings')">
-      <span>⚙️</span><span>목적·단계 설정</span>
-    </button>`;
+    h+=`<a href="admin.html" class="sb-admin-item" style="text-decoration:none;display:flex;align-items:center;gap:7px">
+      <span>⚙️</span><span>전체 설정</span>
+    </a>`;
     h+=`<button class="sb-lock" onclick="adminAuth=false;setView('list');renderSidebar()">🔒 잠금</button>`;
   } else {
     h+=`<div style="padding:8px 12px;margin-top:auto">
-      <button class="sb-lock" onclick="tryAdmin('settings')">🔒 관리자</button>
+      <button class="sb-lock" onclick="tryAdmin('edit')">🔒 관리자</button>
     </div>`;
   }
 
