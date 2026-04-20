@@ -454,10 +454,15 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
     </div>
 
     <!-- 입력 형식 안내 -->
-    <div style="background:var(--acc-lt);border:1px solid var(--acc-md);border-radius:8px;padding:9px 12px;font-size:11px;line-height:1.8">
+    <div style="background:var(--acc-lt);border:1px solid var(--acc-md);border-radius:8px;padding:9px 12px;font-size:11px;line-height:2">
       <strong style="color:var(--acc-tx)">입력 형식:</strong>
-      <span style="color:var(--t2)">타겟/단계/섭외방식/섭-인-교/최근만남일/만남목적/만남결과/다음만남일/만남시간/다음만남목적/확티체크</span><br>
-      <span style="color:var(--t3)">만남결과: 미확티 · 전티 · 확티 · 단계향상 · 만남유지 · 만남전탈락 · 만남후탈락</span>
+      <span style="color:var(--t2)">타겟개강/단계/섭외방식/섭-인-교/최근만남일/만남목적/만남결과/다음만남일/만남시간/다음만남목적/확티체크</span><br>
+      <strong style="color:var(--acc-tx)">단계(영어로 기재):</strong>
+      <span style="color:var(--t2)">찾기 CH &nbsp;·&nbsp; 합자 H &nbsp;·&nbsp; 육따기 D1 &nbsp;·&nbsp; 영따기 D2 &nbsp;·&nbsp; 복음방 B &nbsp;·&nbsp; 센확 CT</span><br>
+      <strong style="color:var(--acc-tx)">만남결과:</strong>
+      <span style="color:var(--t3)">단계향상 · 만남유지 · 만남후탈락</span><br>
+      <strong style="color:var(--acc-tx)">확티체크:</strong>
+      <span style="color:var(--t3)">미확티 · 전티 · 확티 · 만남전탈락 · 만남밀림</span>
     </div>
 
     <textarea id="txtInput" placeholder="청년/D2/노방/황인국-양재준-김예인/4.17/복음방/단계향상/4.19/14:00/복음방/미확티
@@ -483,14 +488,14 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
 /* ═══ CONSTANTS ═══ */
 const DAYS=['일','월','화','수','목','금','토'];
 const MONS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-const ALL_R=['단계향상','단계유지','만남중','연기','탈락전','탈락후'];
-const R_ICON={'단계향상':'🎉','단계유지':'✔️','만남중':'🎵','연기':'🔺','탈락전':'❌','탈락후':'🚫'};
-const R_CLS ={'단계향상':'r-up','단계유지':'r-ke','만남중':'r-on','연기':'r-dl','탈락전':'r-dp','탈락후':'r-da'};
-const R_CLR ={'단계향상':'#15803d','단계유지':'#1d4ed8','만남중':'#7c3aed','연기':'#ea580c','탈락전':'#b91c1c','탈락후':'#6b7280'};
-const R_RANK={'탈락후':1,'탈락전':2,'연기':3,'만남중':4,'단계유지':5,'단계향상':6};
-const CF_RANK={null:0,'미확티':1,'전티완료':2,'확티':3};
-const CF_CLS={'미확티':'cf-un-badge','전티완료':'cf-pt-badge','확티':'cf-ok-badge'};
-const CF_ICON={'미확티':'🔴','전티완료':'🟡','확티':'🟢'};
+const ALL_R=['단계향상','단계유지','만남중','만남후탈락'];
+const R_ICON={'단계향상':'🎉','단계유지':'✔️','만남중':'🎵','만남후탈락':'🚫'};
+const R_CLS ={'단계향상':'r-up','단계유지':'r-ke','만남중':'r-on','만남후탈락':'r-da'};
+const R_CLR ={'단계향상':'#15803d','단계유지':'#1d4ed8','만남중':'#7c3aed','만남후탈락':'#6b7280'};
+const R_RANK={'만남후탈락':1,'만남중':2,'단계유지':3,'단계향상':4};
+const CF_RANK={null:0,'미확티':1,'만남연기':1,'만남전탈락':1,'전티완료':2,'확티':3};
+const CF_CLS={'미확티':'cf-un-badge','전티완료':'cf-pt-badge','확티':'cf-ok-badge','만남전탈락':'cf-un-badge','만남연기':'cf-un-badge'};
+const CF_ICON={'미확티':'🔴','전티완료':'🟡','확티':'🟢','만남전탈락':'❌','만남연기':'🔺'};
 
 function isPre(m){return !m.resultStatus;}
 
@@ -703,15 +708,19 @@ function parseKorDate(raw){
 function mapResultText(raw){
   if(!raw)return{confirmStatus:'미확티',resultStatus:null};
   const r=raw.trim();
-  if(/단계.?향상|향상/.test(r))return{confirmStatus:'확티',resultStatus:'단계향상'};
-  if(/만남.?유지|단계.?유지|유지/.test(r))return{confirmStatus:'확티',resultStatus:'단계유지'};
-  if(/만남.?중/.test(r))return{confirmStatus:'확티',resultStatus:'만남중'};
-  if(/연기/.test(r))return{confirmStatus:'확티',resultStatus:'연기'};
-  if(/만남.?전.?탈락|탈락.?전/.test(r))return{confirmStatus:null,resultStatus:'탈락전'};
-  if(/만남.?후.?탈락|탈락.?후/.test(r))return{confirmStatus:'확티',resultStatus:'탈락후'};
-  if(/확티/.test(r))return{confirmStatus:'확티',resultStatus:null};
-  if(/전티/.test(r))return{confirmStatus:'전티완료',resultStatus:null};
-  if(/미확티/.test(r))return{confirmStatus:'미확티',resultStatus:null};
+
+  /* ── 만남결과 컬럼 (만남 완료 후 3가지만) ── */
+  if(/단계.?향상|향상/.test(r))            return{confirmStatus:null,resultStatus:'단계향상'};
+  if(/만남.?유지|단계.?유지|유지/.test(r)) return{confirmStatus:null,resultStatus:'단계유지'};
+  if(/만남.?후.?탈락|후탈락/.test(r))      return{confirmStatus:null,resultStatus:'만남후탈락'};
+
+  /* ── 확티체크 컬럼 (만남 전 상태) ── */
+  if(/만남.?전.?탈락|전탈락/.test(r))      return{confirmStatus:'만남전탈락',resultStatus:null};
+  if(/만남.?연기|만남.?밀림|연기|밀림/.test(r)) return{confirmStatus:'만남연기',resultStatus:null};
+  if(/^확티$/.test(r))                     return{confirmStatus:'확티',resultStatus:null};
+  if(/전티/.test(r))                       return{confirmStatus:'전티완료',resultStatus:null};
+  if(/미확티/.test(r))                     return{confirmStatus:'미확티',resultStatus:null};
+
   return{confirmStatus:'미확티',resultStatus:null};
 }
 
