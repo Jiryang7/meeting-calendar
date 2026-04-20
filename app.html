@@ -147,7 +147,7 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
 .mc-body{flex:1;min-width:0}
 .mc-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px}
 .mc-people{font-size:15px;font-weight:700;flex-shrink:0}
-.mc-tags{display:flex;gap:3px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.mc-tags{display:flex;gap:3px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;align-items:center;max-width:140px}
 .tag{font-size:10px;padding:1px 7px;border-radius:4px;background:var(--s2);color:var(--t2);border:1px solid var(--bd);white-space:nowrap}
 .mc-sub{font-size:13px;color:var(--t2);line-height:1.6}
 .mc-next{font-size:13px;color:var(--acc-dk);margin-top:3px;font-weight:600}
@@ -276,12 +276,15 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
 .sumbar-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;background:var(--s3);border-radius:4px;flex-shrink:0}
 
 /* ── 웹 2컬럼 레이아웃 (달력뷰) ── */
-.cal-split{display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:start}
-.cal-detail-panel{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:hidden;position:sticky;top:110px;max-height:calc(100vh - 140px);overflow-y:auto}
+.cal-split{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px;align-items:start}
+.cal-detail-panel{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:hidden;position:sticky;top:110px;height:calc(100vh - 140px);overflow-y:auto;word-break:keep-all}
 .cal-detail-empty{padding:40px 20px;text-align:center;color:var(--t3);font-size:13px}
-@media(max-width:900px){
+@media(max-width:1000px){
+  .cal-split{grid-template-columns:1fr 340px}
+}
+@media(max-width:780px){
   .cal-split{grid-template-columns:1fr}
-  .cal-detail-panel{position:static;max-height:none}
+  .cal-detail-panel{position:static;height:auto;max-height:none}
 }
 
 /* ── 모바일 최적화 ── */
