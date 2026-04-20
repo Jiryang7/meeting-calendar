@@ -520,9 +520,9 @@ const SB_HDR={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':
 
 /* ═══ AUTH CHECK ═══ */
 function getSession(){
-  try{return JSON.parse(sessionStorage.getItem('mtg-user'));}catch{return null;}
+  try{return JSON.parse(localStorage.getItem('mtg-user'));}catch{return null;}
 }
-function getEncKey(){return sessionStorage.getItem('mtg-enc-key')||'';}
+function getEncKey(){return localStorage.getItem('mtg-enc-key')||'';}
 
 /* ═══ AES-256-GCM 암호화 ═══ */
 async function getAESKey(encKey){
@@ -2190,8 +2190,8 @@ function showToast(msg){
 originalAdminHTML=document.getElementById('adminOverlay').innerHTML;
 
 function doLogout(){
-  sessionStorage.removeItem('mtg-user');
-  sessionStorage.removeItem('mtg-enc-key');
+  localStorage.removeItem('mtg-user');
+  localStorage.removeItem('mtg-enc-key');
   localStorage.removeItem('mtg-cache');
   window.location.href='index.html';
 }
