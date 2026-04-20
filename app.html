@@ -901,14 +901,22 @@ function applyFilter(list){
   return list;
 }
 
-function setFeedback(key,val){
-  const m=db.meetings.find(x=>mkey(x)===key);
+function setFeedbackIdx(idx,val){
+  const m=db.meetings[idx];
   if(!m)return;
   m.feedback=val;
   save();
-  // sumbar만 즉시 갱신 (전체 re-render 안 해도 됨)
-  const base=filtered();
-  renderSumbar(base);
+  // 피드백 칩 색상도 카드에서 즉시 변경
+  const sel=document.querySelectorAll('.fb-select')[
+    filtered().indexOf(m) // 현재 보이는 목록에서 위치 찾기
+  ];
+  // sumbar 즉시 갱신
+  renderSumbar(filtered());
+  // 해당 select 색상 업데이트
+  document.querySelectorAll('.fb-select').forEach(el=>{
+    const opt=el.value;
+    el.className='fb-select '+(opt==='done'?'fb-done':opt==='plan'?'fb-plan':'fb-none');
+  });
 }
 
 function toggleFilter(type,value){
@@ -1096,7 +1104,7 @@ function cardHTML(m,showReg=false){
       ${m.nextMeeting?`<div class="mc-next">${m.nextMeeting}</div>`:''}
       ${histLine}
     </div>
-    <select class="fb-select ${fbCls}" onchange="setFeedback(${JSON.stringify(mkey(m))},this.value)" title="피드백 상태">
+    <select class="fb-select ${fbCls}" onchange="setFeedbackIdx(${db.meetings.indexOf(m)},this.value)" title="피드백 상태">
       <option value="" ${!m.feedback?'selected':''}>피드백 미정</option>
       <option value="done" ${m.feedback==='done'?'selected':''}>✅ 피드백 완료</option>
       <option value="plan" ${m.feedback==='plan'?'selected':''}>📝 피드백 예정</option>
