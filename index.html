@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>만남 캘린더 — 로그인</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f3ef;--white:#fff;--bd:#dddcd2;--bd2:#c9c8bc;
+  --t1:#1a1916;--t2:#6b6960;--t3:#aaa99f;
+  --acc:#FAC608;--acc-dk:#c49600;--acc-lt:#fffae8;--acc-md:#fde068;
+  --r-dp:#b91c1c;--r-dp-bg:#fee2e2;--r-dp-bd:#fca5a5;
+  --ok:#15803d;--ok-bg:#f0fdf4;--ok-bd:#86efac;
+}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+
+.card{background:var(--white);border:1px solid var(--bd);border-radius:16px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,.07)}
+.logo{display:flex;align-items:center;gap:8px;margin-bottom:28px;justify-content:center}
+.logo-dot{width:10px;height:10px;background:var(--acc);border-radius:50%}
+.logo-text{font-size:18px;font-weight:700;letter-spacing:-.03em}
+
+.tabs{display:flex;background:#f4f3ef;border-radius:9px;padding:3px;margin-bottom:24px;border:1px solid var(--bd)}
+.tab{flex:1;padding:8px;border-radius:7px;border:none;background:none;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .14s}
+.tab.active{background:var(--white);color:var(--t1);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px;letter-spacing:.04em}
+.field input{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;color:var(--t1);outline:none;transition:border-color .13s}
+.field input:focus{border-color:var(--acc);background:var(--acc-lt)}
+.field input::placeholder{color:var(--t3)}
+
+.btn-main{width:100%;background:var(--acc);color:#1a1400;border:none;border-radius:8px;padding:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .13s}
+.btn-main:hover{background:var(--acc-dk);color:#fff}
+.btn-main:disabled{background:var(--bd);color:var(--t3);cursor:not-allowed}
+
+.err{background:var(--r-dp-bg);border:1px solid var(--r-dp-bd);color:var(--r-dp);border-radius:7px;padding:9px 12px;font-size:12px;margin-top:12px;display:none;line-height:1.6}
+.ok-msg{background:var(--ok-bg);border:1px solid var(--ok-bd);color:var(--ok);border-radius:7px;padding:9px 12px;font-size:12px;margin-top:12px;display:none;line-height:1.6}
+
+.hint{font-size:11px;color:var(--t3);text-align:center;margin-top:16px;line-height:1.7}
+.hint strong{color:var(--t2)}
+
+.stripe{height:3px;background:var(--acc);position:fixed;top:0;left:0;right:0}
+
+.spin{width:14px;height:14px;border:2px solid rgba(26,20,0,.2);border-top-color:#1a1400;border-radius:50%;animation:sp .65s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    <span class="logo-text">만남 캘린더</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-login" onclick="switchTab('login')">로그인</button>
+    <button class="tab" id="tab-signup" onclick="switchTab('signup')">첫 등록</button>
+  </div>
+
+  <!-- 로그인 -->
+  <div id="form-login">
+    <div class="field">
+      <label>이름</label>
+      <input id="l-name" type="text" placeholder="등록한 이름" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input id="l-pass" type="password" placeholder="비밀번호" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-main" id="loginBtn" onclick="doLogin()">로그인</button>
+    <div class="err" id="l-err"></div>
+  </div>
+
+  <!-- 첫 등록 -->
+  <div id="form-signup" style="display:none">
+    <div class="field">
+      <label>초대 코드</label>
+      <input id="s-invite" type="password" placeholder="관리자에게 받은 코드">
+    </div>
+    <div class="field">
+      <label>이름 (실명)</label>
+      <input id="s-name" type="text" placeholder="홍길동" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>비밀번호 설정</label>
+      <input id="s-pass" type="password" placeholder="8자 이상" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>비밀번호 확인</label>
+      <input id="s-pass2" type="password" placeholder="한 번 더 입력"
+        onkeydown="if(event.key==='Enter')doSignup()">
+    </div>
+    <button class="btn-main" id="signupBtn" onclick="doSignup()">등록하기</button>
+    <div class="err" id="s-err"></div>
+    <div class="ok-msg" id="s-ok"></div>
+  </div>
+
+  <div class="hint">보안 연결 · 데이터 암호화 저장<br><strong>초대 코드</strong>가 없으면 관리자에게 문의하세요</div>
+</div>
+
+<script>
+/* ═══ CONFIG ═══ */
+const SB_URL='https://zjkrvkaakrhaptwbqfzo.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpqa3J2a2Fha3JoYXB0d2JxZnpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1ODc0MjgsImV4cCI6MjA5MjE2MzQyOH0.UQwt3pagP8D7BJKfyr8LDeb3XytYVYU8t6YLvkoGOWw';
+const HDR={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+/* ═══ CRYPTO HELPERS ═══ */
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function hashPassword(name,pass){
+  // name+pass 조합으로 해시 (rainbow table 방어)
+  return sha256(name+'::'+pass+'::mtg-salt-2024');
+}
+
+/* ═══ UI ═══ */
+function switchTab(t){
+  document.getElementById('tab-login').classList.toggle('active',t==='login');
+  document.getElementById('tab-signup').classList.toggle('active',t==='signup');
+  document.getElementById('form-login').style.display=t==='login'?'':'none';
+  document.getElementById('form-signup').style.display=t==='signup'?'':'none';
+  hideErr();
+}
+function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';}
+function hideErr(){['l-err','s-err','s-ok'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});}
+
+/* ═══ LOGIN ═══ */
+async function doLogin(){
+  const name=document.getElementById('l-name').value.trim();
+  const pass=document.getElementById('l-pass').value;
+  if(!name||!pass){showErr('l-err','이름과 비밀번호를 입력해주세요');return;}
+
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>확인 중...';
+  hideErr();
+
+  try{
+    const hash=await hashPassword(name,pass);
+    const resp=await fetch(`${SB_URL}/rest/v1/users?name=eq.${encodeURIComponent(name)}&select=id,name,password_hash`,{headers:HDR});
+    const rows=await resp.json();
+
+    if(!rows||!rows.length){showErr('l-err','등록되지 않은 이름입니다');return;}
+    const user=rows[0];
+    if(user.password_hash!==hash){showErr('l-err','비밀번호가 맞지 않습니다');return;}
+
+    // 세션 저장 (sessionStorage = 탭 닫으면 자동 삭제)
+    sessionStorage.setItem('mtg-user',JSON.stringify({id:user.id,name:user.name}));
+    // 초대코드(암호화 키)는 로컬에서 파생 — 비밀번호로부터 유도
+    sessionStorage.setItem('mtg-enc-key', await sha256('enc::'+name+'::'+pass));
+
+    window.location.href='app.html';
+  }catch(e){
+    showErr('l-err','오류가 발생했습니다: '+e.message);
+  }finally{
+    btn.disabled=false;btn.textContent='로그인';
+  }
+}
+
+/* ═══ SIGNUP ═══ */
+async function doSignup(){
+  const invite=document.getElementById('s-invite').value.trim();
+  const name=document.getElementById('s-name').value.trim();
+  const pass=document.getElementById('s-pass').value;
+  const pass2=document.getElementById('s-pass2').value;
+  hideErr();
+
+  // validation
+  if(!invite){showErr('s-err','초대 코드를 입력해주세요');return;}
+  if(!name){showErr('s-err','이름을 입력해주세요');return;}
+  if(pass.length<8){showErr('s-err','비밀번호는 8자 이상이어야 합니다');return;}
+  if(pass!==pass2){showErr('s-err','비밀번호가 일치하지 않습니다');return;}
+
+  // 초대코드 검증 (Supabase에 저장된 해시와 비교)
+  const btn=document.getElementById('signupBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>처리 중...';
+
+  try{
+    // 초대코드 해시 확인
+    const inviteHash=await sha256('invite::'+invite);
+    const cfgResp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.00000000-0000-0000-0000-000000000001&select=data`,{headers:HDR});
+    const cfgRows=await cfgResp.json();
+    const cfg=cfgRows?.[0]?.data||{};
+
+    if(!cfg.inviteHash){showErr('s-err','초대 코드가 아직 설정되지 않았습니다. 관리자에게 문의하세요');return;}
+    if(cfg.inviteHash!==inviteHash){showErr('s-err','초대 코드가 올바르지 않습니다');return;}
+
+    // 중복 이름 확인
+    const dupResp=await fetch(`${SB_URL}/rest/v1/users?name=eq.${encodeURIComponent(name)}&select=id`,{headers:HDR});
+    const dups=await dupResp.json();
+    if(dups&&dups.length){showErr('s-err','이미 등록된 이름입니다');return;}
+
+    // 비밀번호 해시 후 등록
+    const hash=await hashPassword(name,pass);
+    const regResp=await fetch(`${SB_URL}/rest/v1/users`,{
+      method:'POST',
+      headers:{...HDR,'Prefer':'return=minimal'},
+      body:JSON.stringify({name,password_hash:hash})
+    });
+
+    if(!regResp.ok){const e=await regResp.text();throw new Error(e);}
+
+    const okEl=document.getElementById('s-ok');
+    okEl.textContent=`✓ 등록 완료! 로그인 탭에서 로그인해주세요`;
+    okEl.style.display='block';
+    setTimeout(()=>switchTab('login'),2000);
+  }catch(e){
+    showErr('s-err','오류: '+e.message);
+  }finally{
+    btn.disabled=false;btn.textContent='등록하기';
+  }
+}
+
+/* ═══ AUTO REDIRECT if already logged in ═══ */
+if(sessionStorage.getItem('mtg-user')){
+  window.location.href='app.html';
+}
+</script>
+</body>
+</html>
