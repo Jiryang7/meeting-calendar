@@ -586,8 +586,9 @@ async function load(){
       db=saved.db||{meetings:[]};
       purposeMap=saved.purposeMap||{};
       stageOrder=saved.stageOrder||[];
-      regionList=saved.regionList||[];
-      cohortList=saved.cohortList||[];
+      // regionList/cohortList: 복호화 데이터 우선, 없으면 raw 최상위에서 가져옴
+      regionList=saved.regionList||raw.regionList||[];
+      cohortList=saved.cohortList||raw.cohortList||[];
       localStorage.setItem('mtg-cache',JSON.stringify({db,purposeMap,stageOrder,regionList,cohortList}));
       render();
     }
@@ -601,9 +602,10 @@ async function save(){
   try{
     let dataToStore;
     if(encKey){
-      // AES-256 암호화 후 저장
+      // AES-256 암호화 후 저장 (만남 데이터)
       const cipher=await encrypt(JSON.stringify(payload),encKey);
-      dataToStore={encrypted:cipher};
+      // regionList/cohortList는 평문으로 최상위에도 저장 (새로고침 시 복구용)
+      dataToStore={encrypted:cipher,regionList,cohortList,stageOrder};
     } else {
       dataToStore=payload;
     }
