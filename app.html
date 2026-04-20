@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-@font-face{font-family:'GangwonEduTt';src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEdu_OTFBoldA.woff') format('woff');font-weight:700;font-style:normal}
+@font-face{font-family:'GangwonEduTt';src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEdu_OTFBoldA.woff2') format('woff2'),url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEdu_OTFBoldA.woff') format('woff');font-weight:700;font-style:normal}
 </style>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -276,7 +276,7 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
 .sumbar-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;background:var(--s3);border-radius:4px;flex-shrink:0}
 
 /* ── 웹 2컬럼 레이아웃 (달력뷰) ── */
-.cal-split{display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start}
+.cal-split{display:grid;grid-template-columns:1fr 340px;gap:12px;align-items:start}
 .cal-detail-panel{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:hidden;position:sticky;top:110px;max-height:calc(100vh - 140px);overflow-y:auto}
 .cal-detail-empty{padding:40px 20px;text-align:center;color:var(--t3);font-size:13px}
 @media(max-width:900px){
@@ -906,7 +906,9 @@ function setFeedback(key,val){
   if(!m)return;
   m.feedback=val;
   save();
-  renderMain(); // re-render to update chip colors
+  // sumbar만 즉시 갱신 (전체 re-render 안 해도 됨)
+  const base=filtered();
+  renderSumbar(base);
 }
 
 function toggleFilter(type,value){
@@ -939,7 +941,7 @@ function renderSumbar(list){
   // 행 1: 피드백
   let row1=`<div class="sumbar-row"><span class="sumbar-label">피드백</span>`;
   [['done','✅ 완료','#15803d'],['plan','📝 예정','#b45309'],['','⬜ 미정','#9ca3af']].forEach(([val,label,color])=>{
-    if(!fbC[val]&&val!=='')return;
+    // 항상 표시 (0건도)
     const act=isActive('fb',val);
     row1+=`<div class="s-chip" style="${chipStyle('fb',val,color)}" onclick="toggleFilter('fb','${val}')">
       <div class="sdot" style="background:${act?'#fff':color}"></div>
