@@ -261,17 +261,24 @@ let showingInvite=false;
 function checkAdmin(){
   const v=document.getElementById('adminPass').value;
   if(v===ADMIN_PASS){
-    document.getElementById('authWrap').style.display='none';
-    document.getElementById('mainWrap').style.display='';
-    document.getElementById('adminUserLabel').textContent='관리자';
-    loadAll();
+    sessionStorage.setItem('mtg-admin','1');
+    showAdminUI();
   } else {
     document.getElementById('authErr').style.display='block';
     document.getElementById('adminPass').value='';
     document.getElementById('adminPass').focus();
   }
 }
-function logout(){window.location.href='index.html';}
+function showAdminUI(){
+  document.getElementById('authWrap').style.display='none';
+  document.getElementById('mainWrap').style.display='';
+  document.getElementById('adminUserLabel').textContent='관리자';
+  loadAll();
+}
+function logout(){
+  sessionStorage.removeItem('mtg-admin');
+  window.location.reload();
+}
 
 /* ═══ CRYPTO ═══ */
 async function sha256(str){
@@ -491,6 +498,11 @@ function showToast(msg){
 
 /* ═══ ENTER KEY ═══ */
 document.getElementById('adminPass').addEventListener('keydown',e=>{if(e.key==='Enter')checkAdmin();});
+
+/* ═══ AUTO RESTORE SESSION ═══ */
+if(sessionStorage.getItem('mtg-admin')==='1'){
+  showAdminUI();
+}
 </script>
 </body>
 </html>
