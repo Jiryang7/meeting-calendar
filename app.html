@@ -276,16 +276,10 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
 .sumbar-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;background:var(--s3);border-radius:4px;flex-shrink:0}
 
 /* ── 웹 2컬럼 레이아웃 (달력뷰) ── */
-.cal-split{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px;align-items:start}
-.cal-detail-panel{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:hidden;position:sticky;top:110px;height:calc(100vh - 140px);overflow-y:auto;word-break:keep-all}
+.cal-split{display:block}
+.cal-detail-panel{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-top:14px;word-break:keep-all}
 .cal-detail-empty{padding:40px 20px;text-align:center;color:var(--t3);font-size:13px}
-@media(max-width:1000px){
-  .cal-split{grid-template-columns:1fr 340px}
-}
-@media(max-width:780px){
-  .cal-split{grid-template-columns:1fr}
-  .cal-detail-panel{position:static;height:auto;max-height:none}
-}
+/* cal-split responsive handled inline */
 
 /* ── 모바일 최적화 ── */
 @media(max-width:640px){
@@ -381,12 +375,8 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
           <div class="cal-nav-title" id="monTitle"></div>
           <button class="cnbtn" onclick="calMove(1)">›</button>
         </div>
-        <div class="cal-split">
-          <div><div class="mon-grid" id="monGrid"></div></div>
-          <div class="cal-detail-panel" id="monDetailPanel">
-            <div class="cal-detail-empty">날짜를 클릭하면<br>여기에 표시됩니다</div>
-          </div>
-        </div>
+        <div class="mon-grid" id="monGrid"></div>
+        <div class="cal-detail-panel" id="monDetailPanel" style="display:none"></div>
       </div>
       <div id="weekView" style="display:none">
         <div class="week-nav">
@@ -1247,8 +1237,9 @@ function doSelMon(ds){
 function renderMonDetail(byDate){
   const el=document.getElementById('monDetailPanel');if(!el)return;
   if(!selMon||!(byDate[selMon]||[]).length){
-    el.innerHTML='<div class="cal-detail-empty">날짜를 클릭하면<br>여기에 표시됩니다</div>';return;
+    el.style.display='none';return;
   }
+  el.style.display='block';
   const ms=byDate[selMon];
   const dt=new Date(selMon+'T00:00:00'),mm=+selMon.slice(5,7),dd=+selMon.slice(8,10);
   const upCnt=ms.filter(m=>m.resultStatus==='단계향상').length;
