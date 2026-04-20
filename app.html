@@ -294,6 +294,51 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
   .hdr{padding:0 12px;gap:7px}
 }
 
+
+/* ════ STATS VIEW ════ */
+.stats-wrap{padding:0}
+.stats-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+.stats-sel{background:var(--white);border:1px solid var(--bd2);border-radius:8px;padding:7px 12px;font-family:'Pretendard',sans-serif;font-size:13px;color:var(--t1);outline:none;cursor:pointer;transition:border-color .13s;font-weight:500}
+.stats-sel:focus{border-color:var(--acc)}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.stat-card{background:var(--white);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+.stat-card-hdr{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px}
+.stat-card-title{font-size:14px;font-weight:700;font-family:'GangwonEduTt',sans-serif}
+.stat-card-body{padding:16px 18px}
+
+/* 숫자 요약 카드 */
+.stat-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat-num-item{text-align:center;padding:12px 8px;background:var(--s2);border-radius:10px;border:1px solid var(--bd)}
+.stat-num-val{font-size:24px;font-weight:700;font-family:'GangwonEduTt',sans-serif;display:block;line-height:1.1}
+.stat-num-label{font-size:10px;color:var(--t2);margin-top:4px;display:block}
+
+/* 바 차트 */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-label{font-size:12px;font-weight:600;min-width:72px;flex-shrink:0;color:var(--t1)}
+.bar-track{flex:1;height:20px;background:var(--s2);border-radius:6px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:6px;transition:width .5s ease;min-width:4px;display:flex;align-items:center;padding-left:8px}
+.bar-val{font-size:11px;font-weight:700;color:var(--white);font-family:'DM Mono',monospace;white-space:nowrap}
+.bar-cnt{font-size:11px;color:var(--t3);min-width:32px;text-align:right;font-family:'DM Mono',monospace;flex-shrink:0}
+
+/* 파이 요약 */
+.pie-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:8px}
+.pie-item{display:flex;align-items:center;gap:5px;font-size:12px}
+.pie-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* 지역 비교 */
+.region-compare{width:100%;border-collapse:collapse;font-size:12px}
+.region-compare th{font-size:10px;font-weight:700;color:var(--t3);text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd);letter-spacing:.06em;background:var(--s2)}
+.region-compare td{padding:8px 10px;border-bottom:1px solid var(--bd);vertical-align:middle}
+.region-compare tr:last-child td{border-bottom:none}
+.region-compare tr:hover td{background:var(--bg)}
+.mini-bar{height:6px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:4px}
+
+.stat-empty{text-align:center;padding:40px;color:var(--t3);font-size:13px}
+.rate-circle{display:flex;align-items:center;justify-content:center;margin:8px 0}
+.rate-num{font-size:36px;font-weight:700;font-family:'GangwonEduTt',sans-serif}
+.rate-unit{font-size:16px;color:var(--t2);margin-left:2px}
+
 </style>
 </head>
 <body>
@@ -304,6 +349,7 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
     <button class="vtab active" onclick="setView('list')" id="vt-list">목록</button>
     <button class="vtab" onclick="setView('month')" id="vt-month">월간</button>
     <button class="vtab" onclick="setView('week')" id="vt-week">주간</button>
+    <button class="vtab" onclick="setView('stats')" id="vt-stats">📊 분석</button>
     <!-- settings moved to sidebar -->
   </div>
   <div class="hdr-r">
@@ -353,6 +399,9 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
       </div>
       <div id="editView" style="display:none">
         <div class="settings-wrap" id="editWrap"></div>
+      </div>
+      <div id="statsView" style="display:none">
+        <div id="statsWrap"></div>
       </div>
     </div>
   </div>
@@ -823,14 +872,15 @@ function setCohort(cohort){
 }
 function setView(v){
   curView=v;
-  ['list','month','week','settings'].forEach(n=>{
+  ['list','month','week','settings','stats'].forEach(n=>{
     document.getElementById('vt-'+n)&&document.getElementById('vt-'+n).classList.toggle('active',n===v);
-    const m={'list':'listView','month':'monthView','week':'weekView','settings':'settingsView'};
+    const m={'list':'listView','month':'monthView','week':'weekView','settings':'settingsView','stats':'statsView'};
     if(document.getElementById(m[n]))document.getElementById(m[n]).style.display=n===v?'':'none';
   });
   const isAdmin=(v==='settings'||v==='edit');
-  document.getElementById('rtabs').style.display=isAdmin?'none':'';
-  document.getElementById('sumbar').style.display=isAdmin?'none':'';
+  const isStats=v==='stats';
+  document.getElementById('rtabs').style.display=(isAdmin||isStats)?'none':'';
+  document.getElementById('sumbar').style.display=(isAdmin||isStats)?'none':'';
   document.getElementById('editView').style.display=v==='edit'?'':'none';
   selMon=null;selWk=null;renderSidebar();renderMain();
 }
@@ -885,6 +935,7 @@ function renderTabs(){
 function renderMain(){
   if(curView==='settings'){renderSettings();return;}
   if(curView==='edit'){renderEdit();return;}
+  if(curView==='stats'){renderStats();return;}
   const base=filtered();
   renderSumbar(base);
   const list=applyFilter(base);
@@ -1878,6 +1929,245 @@ function populateSelects(){
 }
 
 // 개강/지역 추가는 관리자 페이지에서만 가능
+
+/* ════════════════════════════
+   STATS VIEW
+════════════════════════════ */
+let statsCohort='전체';
+let statsRegion='전체';
+
+function renderStats(){
+  const el=document.getElementById('statsWrap');
+  if(!el)return;
+
+  // 전체 데이터에서 개강·지역 목록
+  const allCohorts=[...new Set(db.meetings.map(m=>m.cohort).filter(Boolean))].sort((a,b)=>(parseInt(b)||0)-(parseInt(a)||0));
+  const allRegions=[...new Set(db.meetings.map(m=>m.region).filter(Boolean))];
+  const orderedRegions=[...(regionList||[]).filter(r=>allRegions.includes(r)),...allRegions.filter(r=>!(regionList||[]).includes(r))];
+
+  // 필터 선택자
+  let filterH=`<div class="stats-filters">
+    <select class="stats-sel" onchange="statsCohort=this.value;renderStats()">
+      <option value="전체" ${statsCohort==='전체'?'selected':''}>전체 개강</option>
+      ${allCohorts.map(c=>`<option value="${c}" ${statsCohort===c?'selected':''}>${c}</option>`).join('')}
+    </select>
+    <select class="stats-sel" onchange="statsRegion=this.value;renderStats()">
+      <option value="전체" ${statsRegion==='전체'?'selected':''}>전체 지역</option>
+      ${orderedRegions.map(r=>`<option value="${r}" ${statsRegion===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+    <span style="font-size:12px;color:var(--t3);margin-left:4px">선택 후 자동 반영</span>
+  </div>`;
+
+  // 데이터 필터
+  let list=db.meetings;
+  if(statsCohort!=='전체')list=list.filter(m=>m.cohort===statsCohort);
+  if(statsRegion!=='전체')list=list.filter(m=>m.region===statsRegion);
+
+  if(!list.length){
+    el.innerHTML=filterH+`<div class="stat-empty">📭 해당 조건의 데이터가 없습니다</div>`;
+    return;
+  }
+
+  const pre=list.filter(isPre), done=list.filter(m=>!isPre(m));
+  const total=list.length;
+
+  // ── 카드 1: 전체 요약 ──
+  const upCnt=done.filter(m=>m.resultStatus==='단계향상').length;
+  const dropCnt=done.filter(m=>m.resultStatus==='탈락전'||m.resultStatus==='탈락후').length;
+  const upRate=done.length?Math.round(upCnt/done.length*100):0;
+  const okCnt=list.filter(m=>m.confirmStatus==='확티').length;
+  const okRate=pre.length?Math.round(okCnt/pre.length*100):0;
+  const fbDone=list.filter(m=>m.feedback==='done').length;
+  const fbRate=total?Math.round(fbDone/total*100):0;
+
+  const card1=`<div class="stat-card">
+    <div class="stat-card-hdr"><span class="stat-card-title">📋 전체 요약</span><span style="font-size:11px;color:var(--t2);font-family:'DM Mono',monospace">총 ${total}건</span></div>
+    <div class="stat-card-body">
+      <div class="stat-nums">
+        <div class="stat-num-item">
+          <span class="stat-num-val" style="color:var(--r-up)">${upCnt}</span>
+          <span class="stat-num-label">단계향상</span>
+        </div>
+        <div class="stat-num-item">
+          <span class="stat-num-val" style="color:var(--cf-ok)">${pre.length}</span>
+          <span class="stat-num-label">예정 만남</span>
+        </div>
+        <div class="stat-num-item">
+          <span class="stat-num-val" style="color:var(--r-dp)">${dropCnt}</span>
+          <span class="stat-num-label">탈락</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;padding-top:12px;border-top:1px solid var(--bd)">
+        <div>
+          <div style="font-size:22px;font-weight:700;font-family:'GangwonEduTt',sans-serif;color:var(--r-up)">${upRate}%</div>
+          <div style="font-size:10px;color:var(--t2)">향상률</div>
+        </div>
+        <div>
+          <div style="font-size:22px;font-weight:700;font-family:'GangwonEduTt',sans-serif;color:var(--cf-ok)">${okRate}%</div>
+          <div style="font-size:10px;color:var(--t2)">확티전환율</div>
+        </div>
+        <div>
+          <div style="font-size:22px;font-weight:700;font-family:'GangwonEduTt',sans-serif;color:var(--acc-dk)">${fbRate}%</div>
+          <div style="font-size:10px;color:var(--t2)">피드백완료율</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // ── 카드 2: 확인티켓 현황 (예정 만남) ──
+  const cfData=[
+    {label:'🔴 미확티', cnt:pre.filter(m=>(m.confirmStatus||'미확티')==='미확티').length, color:'var(--cf-un)'},
+    {label:'🟡 전티완료', cnt:pre.filter(m=>m.confirmStatus==='전티완료').length, color:'var(--cf-pt)'},
+    {label:'🟢 확티',    cnt:pre.filter(m=>m.confirmStatus==='확티').length,    color:'var(--cf-ok)'},
+  ];
+  const cfMax=Math.max(...cfData.map(d=>d.cnt),1);
+  const card2=`<div class="stat-card">
+    <div class="stat-card-hdr"><span class="stat-card-title">📅 예정 만남 현황</span><span style="font-size:11px;color:var(--t2);font-family:'DM Mono',monospace">${pre.length}건</span></div>
+    <div class="stat-card-body">
+      ${pre.length?cfData.map(d=>`
+        <div class="bar-row">
+          <span class="bar-label">${d.label}</span>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.max(d.cnt/cfMax*100,d.cnt?4:0)}%;background:${d.color}">
+              ${d.cnt>0?`<span class="bar-val">${d.cnt}</span>`:''}
+            </div>
+          </div>
+          <span class="bar-cnt">${d.cnt}</span>
+        </div>`).join('')
+      :'<div class="stat-empty" style="padding:20px">예정 만남 없음</div>'}
+    </div>
+  </div>`;
+
+  // ── 카드 3: 만남 결과 ──
+  const resultData=[
+    {label:'🎉 단계향상', cnt:done.filter(m=>m.resultStatus==='단계향상').length, color:'var(--r-up)'},
+    {label:'✔️ 단계유지', cnt:done.filter(m=>m.resultStatus==='단계유지').length, color:'var(--r-ke)'},
+    {label:'🎵 만남중',   cnt:done.filter(m=>m.resultStatus==='만남중').length,   color:'var(--r-on)'},
+    {label:'🔺 연기',     cnt:done.filter(m=>m.resultStatus==='연기').length,     color:'var(--r-dl)'},
+    {label:'❌ 탈락전',   cnt:done.filter(m=>m.resultStatus==='탈락전').length,   color:'var(--r-dp)'},
+    {label:'🚫 탈락후',   cnt:done.filter(m=>m.resultStatus==='탈락후').length,   color:'var(--r-da)'},
+  ].filter(d=>d.cnt>0);
+  const rMax=Math.max(...resultData.map(d=>d.cnt),1);
+  const card3=`<div class="stat-card">
+    <div class="stat-card-hdr"><span class="stat-card-title">✅ 만남 결과</span><span style="font-size:11px;color:var(--t2);font-family:'DM Mono',monospace">${done.length}건</span></div>
+    <div class="stat-card-body">
+      ${done.length?resultData.map(d=>`
+        <div class="bar-row">
+          <span class="bar-label">${d.label}</span>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.max(d.cnt/rMax*100,4)}%;background:${d.color}">
+              <span class="bar-val">${d.cnt}</span>
+            </div>
+          </div>
+          <span class="bar-cnt">${Math.round(d.cnt/done.length*100)}%</span>
+        </div>`).join('')
+      :'<div class="stat-empty" style="padding:20px">결과 데이터 없음</div>'}
+    </div>
+  </div>`;
+
+  // ── 카드 4: 피드백 현황 ──
+  const fbData=[
+    {label:'✅ 완료', cnt:list.filter(m=>m.feedback==='done').length, color:'var(--r-up)'},
+    {label:'📝 예정', cnt:list.filter(m=>m.feedback==='plan').length, color:'var(--cf-pt)'},
+    {label:'⬜ 미정', cnt:list.filter(m=>!m.feedback).length,         color:'var(--t3)'},
+  ];
+  const fbMax=Math.max(...fbData.map(d=>d.cnt),1);
+  const card4=`<div class="stat-card">
+    <div class="stat-card-hdr"><span class="stat-card-title">📝 피드백 현황</span></div>
+    <div class="stat-card-body">
+      ${fbData.map(d=>`
+        <div class="bar-row">
+          <span class="bar-label">${d.label}</span>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.max(d.cnt/fbMax*100,d.cnt?4:0)}%;background:${d.color}">
+              ${d.cnt>0?`<span class="bar-val">${d.cnt}</span>`:''}
+            </div>
+          </div>
+          <span class="bar-cnt">${total?Math.round(d.cnt/total*100):0}%</span>
+        </div>`).join('')}
+    </div>
+  </div>`;
+
+  // ── 카드 5: 단계별 현황 ──
+  const stageMap={};
+  list.forEach(m=>{
+    const key=m.stage||resolvePurpose(m.purpose||'기타');
+    if(!stageMap[key])stageMap[key]={total:0,up:0,drop:0,pre:0};
+    stageMap[key].total++;
+    if(m.resultStatus==='단계향상')stageMap[key].up++;
+    if(m.resultStatus==='탈락전'||m.resultStatus==='탈락후')stageMap[key].drop++;
+    if(isPre(m))stageMap[key].pre++;
+  });
+  const stages=Object.entries(stageMap).sort((a,b)=>b[1].total-a[1].total);
+  const stMax=Math.max(...stages.map(([,v])=>v.total),1);
+  const card5=`<div class="stat-card" style="grid-column:1/-1">
+    <div class="stat-card-hdr"><span class="stat-card-title">🎯 단계별 현황</span></div>
+    <div class="stat-card-body" style="padding:0">
+      <table class="region-compare">
+        <thead><tr>
+          <th>단계</th><th style="text-align:center">전체</th>
+          <th style="text-align:center">예정</th>
+          <th style="text-align:center">향상</th>
+          <th style="text-align:center">탈락</th>
+          <th style="text-align:center">향상률</th>
+          <th>분포</th>
+        </tr></thead>
+        <tbody>
+          ${stages.map(([name,v])=>{
+            const rate=v.total-v.pre>0?Math.round(v.up/(v.total-v.pre)*100):0;
+            const barW=Math.round(v.total/stMax*100);
+            return `<tr>
+              <td style="font-weight:700;font-size:13px">${name}</td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700">${v.total}</td>
+              <td style="text-align:center;color:var(--cf-ok)">${v.pre||'—'}</td>
+              <td style="text-align:center;color:var(--r-up)">${v.up||'—'}</td>
+              <td style="text-align:center;color:var(--r-dp)">${v.drop||'—'}</td>
+              <td style="text-align:center;font-weight:700;color:${rate>=50?'var(--r-up)':rate>=30?'var(--cf-pt)':'var(--r-dp)'}">${v.total-v.pre>0?rate+'%':'—'}</td>
+              <td><div style="height:8px;border-radius:4px;background:var(--acc);width:${barW}%;min-width:4px"></div></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  // ── 카드 6: 지역별 비교 (지역 전체 선택 시에만) ──
+  let card6='';
+  if(statsRegion==='전체'&&orderedRegions.length>1){
+    const regionStats=orderedRegions.map(r=>{
+      const rm=list.filter(m=>m.region===r);
+      const rDone=rm.filter(m=>!isPre(m));
+      return {r,total:rm.length,up:rDone.filter(m=>m.resultStatus==='단계향상').length,pre:rm.filter(isPre).length,rate:rDone.length?Math.round(rm.filter(m=>m.resultStatus==='단계향상').length/rDone.length*100):0};
+    }).filter(d=>d.total>0).sort((a,b)=>b.total-a.total);
+    const rMax2=Math.max(...regionStats.map(d=>d.total),1);
+    card6=`<div class="stat-card" style="grid-column:1/-1">
+      <div class="stat-card-hdr"><span class="stat-card-title">📍 지역별 비교</span></div>
+      <div class="stat-card-body" style="padding:0">
+        <table class="region-compare">
+          <thead><tr>
+            <th>지역</th><th style="text-align:center">전체</th>
+            <th style="text-align:center">예정</th>
+            <th style="text-align:center">향상</th>
+            <th style="text-align:center">향상률</th>
+            <th>분포</th>
+          </tr></thead>
+          <tbody>
+            ${regionStats.map(d=>`<tr>
+              <td style="font-weight:700">${d.r}</td>
+              <td style="text-align:center;font-family:'DM Mono',monospace;font-weight:700">${d.total}</td>
+              <td style="text-align:center;color:var(--cf-ok)">${d.pre||'—'}</td>
+              <td style="text-align:center;color:var(--r-up)">${d.up||'—'}</td>
+              <td style="text-align:center;font-weight:700;color:${d.rate>=50?'var(--r-up)':d.rate>=30?'var(--cf-pt)':'var(--r-dp)'}">${d.total-d.pre>0?d.rate+'%':'—'}</td>
+              <td><div style="height:8px;border-radius:4px;background:var(--acc);width:${Math.round(d.total/rMax2*100)}%;min-width:4px"></div></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=`<div class="stats-wrap">${filterH}<div class="stats-grid">${card1}${card2}${card3}${card4}${card5}${card6}</div></div>`;
+}
 
 /* ═══ MODAL ═══ */
 function openModal(){document.getElementById('overlay').classList.remove('hidden');document.getElementById('dataInfo').textContent=`저장: ${db.meetings.length}건`;setTimeout(populateSelects,50);}
