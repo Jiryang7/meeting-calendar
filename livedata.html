@@ -139,8 +139,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 <div class="toast-wrap"><div class="toast" id="toast"></div></div>
 
 <script>
-const SB_URL='https://zjkrvkaakrhaptwbqfzo.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpqa3J2a2Fha3JoYXB0d2JxZnpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1ODc0MjgsImV4cCI6MjA5MjE2MzQyOH0.UQwt3pagP8D7BJKfyr8LDeb3XytYVYU8t6YLvkoGOWw';
+const SB_URL='https://tduhoyzgbkwhrvfadsww.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkdWhveXpnYmt3aHJ2ZmFkc3d3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjI3NjMsImV4cCI6MjA5MjQ5ODc2M30.yoAiBzAJCHnp_gtWzO2WooeIlVh8xRnpCmBZETrX-wg';
 const SB_HDR={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
 const LD_ID='00000000-0000-0000-0000-000000000002';
 const MTG_ID='00000000-0000-0000-0000-000000000001';
@@ -156,7 +156,7 @@ function doLogout(){localStorage.removeItem('mtg-user');localStorage.removeItem(
 if(!getSession()){window.location.href='index.html';}
 
 function today(){return new Date().toISOString().slice(0,10);}
-function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r.toISOString().slice(0,10);}
+function addDays(d,n){const r=new Date(d+'T00:00:00');r.setDate(r.getDate()+n);return r.toISOString().slice(0,10);}
 function fmtDate(d){const r=new Date(d+'T00:00:00');return`${r.getMonth()+1}/${r.getDate()}`;}
 function getDow(d){return['일','월','화','수','목','금','토'][new Date(d+'T00:00:00').getDay()];}
 
@@ -276,7 +276,7 @@ function renderMeetTables(){
       const cells=DATE_COLS.map(c=>{
         const list=buckets[c.key]||[];
         if(!list.length)return`<td><span class="empty-dash">—</span></td>`;
-        const chips=list.map(p=>`<span class="chip chip-${p.purpose}">${p.people||''}</span>`).join('');>${(p.people||'').split('-')[0]||p.people}</span>`).join('');
+        const chips=list.map(p=>`<span class="chip chip-${p.purpose}">${(p.people||'').split('-')[0]||p.people}</span>`).join('');
         return`<td><div class="chip-wrap">${chips}</div></td>`;
       }).join('');
       return`<tr><td class="region-td">${r}<div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rp.length}명</div></td>${cells}</tr>`;
