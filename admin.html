@@ -161,19 +161,26 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       </div>
     </div>
 
-    <!-- 지역 관리 -->
+    <!-- 지역 관리 & 순서 (만캘 + 보유데이터 공통) -->
     <div class="sc">
       <div class="sc-hdr">
         <div>
-          <div class="sc-title">📍 지역 관리</div>
-          <div class="sc-sub">추가·수정·삭제 가능. 만남 데이터는 유지됩니다.</div>
+          <div class="sc-title">📍 지역 관리 &amp; 순서</div>
+          <div class="sc-sub">▲▼로 순서 조정 → 만캘 · 보유데이터 둘 다 동시 반영</div>
         </div>
+        <button class="btn btn-sm btn-acc" onclick="saveRegionOrder()">저장</button>
       </div>
-      <div class="sc-body">
-        <div class="tag-list" id="regionTagList"></div>
-        <div class="input-row" style="margin-top:12px">
-          <input id="newRegion" type="text" placeholder="새 지역 이름 (예: 마포)">
-          <button class="btn" onclick="addRegion()">추가</button>
+      <div class="sc-body" style="padding:0">
+        <table style="width:100%;border-collapse:collapse">
+          <tbody id="regionOrderBody">
+            <tr><td style="padding:20px;text-align:center;color:var(--t3)">불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:10px 16px;border-top:1px solid var(--bd)">
+        <div class="input-row">
+          <input id="newRegionOrder" type="text" placeholder="새 지역 추가 (예: 화정)">
+          <button class="btn" onclick="addRegionOrder()">추가</button>
         </div>
       </div>
     </div>
@@ -230,29 +237,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       </div>
     </div>
 
-    <!-- 보유데이터 지역 순서 -->
-    <div class="sc">
-      <div class="sc-hdr">
-        <div>
-          <div class="sc-title">📊 보유데이터 지역 순서</div>
-          <div class="sc-sub">▲▼로 순서 조정. 저장 후 Live Data 표에 반영됩니다.</div>
-        </div>
-        <button class="btn btn-sm btn-acc" onclick="saveRegionOrder()">저장</button>
-      </div>
-      <div class="sc-body" style="padding:0">
-        <table style="width:100%;border-collapse:collapse">
-          <tbody id="regionOrderBody">
-            <tr><td style="padding:20px;text-align:center;color:var(--t3)">불러오는 중...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div style="padding:10px 16px;border-top:1px solid var(--bd)">
-        <div class="input-row">
-          <input id="newRegionOrder" type="text" placeholder="새 지역 추가 (예: 화정)">
-          <button class="btn" onclick="addRegionOrder()">추가</button>
-        </div>
-      </div>
-    </div>
+
 
     <!-- 데이터 관리 -->
     <div class="sc">
@@ -571,20 +556,19 @@ function removeRegionOrder(idx){
 
 async function saveRegionOrder(){
   try{
+    const order=ldData.regionOrder||[];
+    // 1. 보유데이터(LD) 저장
     const chk=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}&select=id`,{headers:HDR});
     const rows=await chk.json();
     if(!rows||!rows.length){
-      await fetch(`${SB_URL}/rest/v1/meetings`,{
-        method:'POST',headers:{...HDR,'Prefer':'return=minimal'},
-        body:JSON.stringify({id:LD_ID,data:ldData})
-      });
+      await fetch(`${SB_URL}/rest/v1/meetings`,{method:'POST',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify({id:LD_ID,data:ldData})});
     } else {
-      await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}`,{
-        method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},
-        body:JSON.stringify({data:ldData})
-      });
+      await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}`,{method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify({data:ldData})});
     }
-    showToast('지역 순서 저장됨');
+    // 2. 만캘(MTG)의 regionList도 같은 순서로 저장
+    appData.regionList=order;
+    await saveAppData();
+    showToast('지역 순서 저장됨 (만캘 + 보유데이터)');
   }catch(e){showToast('저장 오류: '+e.message);}
 }
 
