@@ -30,6 +30,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .btn{background:var(--white);border:1px solid var(--bd2);color:var(--t1);border-radius:7px;padding:6px 13px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .13s}
 .btn:hover{border-color:var(--acc);background:var(--acc-lt)}
 .btn-sm{padding:4px 9px;font-size:11px}
+.btn-filter{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:var(--white);color:var(--t2);transition:all .13s}
+.btn-filter.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn-filter:hover:not(.active){background:var(--s2)}
+
+/* 필터 바 */
+.filter-bar{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--white);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-label{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.05em}
+
 .content{max-width:1200px;margin:0 auto;padding:20px 20px 80px}
 .section{margin-bottom:32px}
 .section-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -93,12 +102,28 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   </div>
 </div>
 
+<!-- 필터 바 -->
+<div class="filter-bar">
+  <div class="filter-group">
+    <span class="filter-label">개강</span>
+    <button class="btn-filter active" onclick="setFilter('term','전체',this)">전체</button>
+    <button class="btn-filter" onclick="setFilter('term','4월',this)">4월</button>
+    <button class="btn-filter" onclick="setFilter('term','5월',this)">5월</button>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">구분</span>
+    <button class="btn-filter active" onclick="setFilter('type','전체',this)">전체</button>
+    <button class="btn-filter" onclick="setFilter('type','청년',this)">청년</button>
+    <button class="btn-filter" onclick="setFilter('type','협력교회',this)">협력교회</button>
+  </div>
+</div>
+
 <div class="content">
   <div class="section">
     <div class="section-hdr">
       <div class="section-title">📈 단계별 보유현황</div>
       <div class="section-badge" id="totalBadge">총 0명</div>
-      <span style="font-size:11px;color:var(--t3)">목표 숫자 클릭해서 수정 가능</span>
+      <span style="font-size:11px;color:var(--t3)">목표 클릭해서 수정 가능</span>
     </div>
     <div class="table-wrap">
       <table class="stage-table">
@@ -106,34 +131,27 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
           <tr>
             <th rowspan="2" style="background:#bde0f5;color:var(--t1)">지역</th>
             <th colspan="4" style="background:#dbeafe;color:#1e40af">목표 (클릭해서 수정)</th>
-            <th style="background:#e0f2fe;color:#0369a1">CH<div style="font-size:9px;font-weight:400">찾기</div></th>
-            <th style="background:#ede9fe;color:#6d28d9">H<div style="font-size:9px;font-weight:400">합자</div></th>
-            <th style="background:#fffbeb;color:#92400e">D1<div style="font-size:9px;font-weight:400">육따</div></th>
-            <th style="background:#fff7ed;color:#c2410c">D2<div style="font-size:9px;font-weight:400">영따</div></th>
-            <th style="background:#ecfdf5;color:#065f46">B<div style="font-size:9px;font-weight:400">복</div></th>
-            <th style="background:#eef2ff;color:#3730a3">CT<div style="font-size:9px;font-weight:400">센확</div></th>
-            <th style="background:var(--acc-lt);color:var(--acc-dk)">합계</th>
+            <th style="background:#e0f2fe;color:#0369a1" rowspan="2">CH<br><span style="font-size:9px;font-weight:400">찾기</span></th>
+            <th style="background:#ede9fe;color:#6d28d9" rowspan="2">H<br><span style="font-size:9px;font-weight:400">합자</span></th>
+            <th style="background:#fffbeb;color:#92400e" rowspan="2">D1<br><span style="font-size:9px;font-weight:400">육따</span></th>
+            <th style="background:#fff7ed;color:#c2410c" rowspan="2">D2<br><span style="font-size:9px;font-weight:400">영따</span></th>
+            <th style="background:#ecfdf5;color:#065f46" rowspan="2">B<br><span style="font-size:9px;font-weight:400">복</span></th>
+            <th style="background:#eef2ff;color:#3730a3" rowspan="2">CT<br><span style="font-size:9px;font-weight:400">센확</span></th>
+            <th style="background:var(--acc-lt);color:var(--acc-dk)" rowspan="2">합계</th>
             <th colspan="3" style="background:#fef9c3;color:#854d0e">달성%</th>
           </tr>
           <tr>
             <th style="background:#dbeafe;color:#1e40af;font-size:10px">센등</th>
-            <th style="background:#dbeafe;color:#1e40af;font-size:10px">합자</th>
-            <th style="background:#dbeafe;color:#1e40af;font-size:10px">육따기</th>
             <th style="background:#dbeafe;color:#1e40af;font-size:10px">영따기</th>
-            <th style="background:#e0f2fe;color:#0369a1;font-size:9px"></th>
-            <th style="background:#ede9fe;color:#6d28d9;font-size:9px"></th>
-            <th style="background:#fffbeb;color:#92400e;font-size:9px"></th>
-            <th style="background:#fff7ed;color:#c2410c;font-size:9px"></th>
-            <th style="background:#ecfdf5;color:#065f46;font-size:9px"></th>
-            <th style="background:#eef2ff;color:#3730a3;font-size:9px"></th>
-            <th style="background:var(--acc-lt)"></th>
+            <th style="background:#dbeafe;color:#1e40af;font-size:10px">육따기</th>
+            <th style="background:#dbeafe;color:#1e40af;font-size:10px">합자</th>
             <th style="background:#fef9c3;color:#854d0e;font-size:10px">합자%</th>
             <th style="background:#fef9c3;color:#854d0e;font-size:10px">육따%</th>
             <th style="background:#fef9c3;color:#854d0e;font-size:10px">영따%</th>
           </tr>
         </thead>
         <tbody id="stageBody">
-          <tr><td colspan="12" style="padding:40px;text-align:center;color:var(--t3);font-family:'Noto Sans KR',sans-serif;font-weight:400">데이터가 없습니다</td></tr>
+          <tr><td colspan="15" style="padding:40px;text-align:center;color:var(--t3);font-family:'Noto Sans KR',sans-serif;font-weight:400">데이터가 없습니다</td></tr>
         </tbody>
       </table>
     </div>
@@ -161,23 +179,51 @@ const MTG_ID='00000000-0000-0000-0000-000000000001';
 const STAGES=['CH','H','D1','D2','B','CT'];
 const STAGE_LABELS={CH:'찾기',H:'합자',D1:'육따',D2:'영따',B:'복',CT:'센확'};
 const STAGE_COLORS={CH:'var(--stage-ch)',H:'var(--stage-h)',D1:'var(--stage-d1)',D2:'var(--stage-d2)',B:'var(--stage-b)',CT:'var(--stage-ct)'};
-const STAGE_TXT={CH:'#0369a1',H:'#6d28d9',D1:'#92400e',D2:'#c2410c',B:'#065f46',CT:'#3730a3'};
 
 let ldData={people:[],goals:{},regionList:[],regionOrder:[]};
+let filterTerm='전체'; // 전체/4월/5월
+let filterType='전체'; // 전체/청년/협력교회
 
 function getSession(){try{return JSON.parse(localStorage.getItem('mtg-user'));}catch{return null;}}
 function doLogout(){localStorage.removeItem('mtg-user');localStorage.removeItem('mtg-enc-key');window.location.href='index.html';}
 if(!getSession()){window.location.href='index.html';}
 
 function today(){return new Date().toISOString().slice(0,10);}
-function addDays(d,n){const r=new Date(d+'T00:00:00');r.setDate(r.getDate()+n);return r.toISOString().slice(0,10);}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r.toISOString().slice(0,10);}
 function fmtDate(d){const r=new Date(d+'T00:00:00');return`${r.getMonth()+1}/${r.getDate()}`;}
 function getDow(d){return['일','월','화','수','목','금','토'][new Date(d+'T00:00:00').getDay()];}
 
-function getOrderedRegions(){
-  const all=[...new Set(ldData.people.map(p=>p.region).filter(Boolean))];
+function getOrderedRegions(people){
+  const all=[...new Set(people.map(p=>p.region).filter(Boolean))];
   const order=ldData.regionOrder||[];
   return[...order.filter(r=>all.includes(r)),...all.filter(r=>!order.includes(r))];
+}
+
+/* 필터 적용 */
+function setFilter(key,val,el){
+  if(key==='term') filterTerm=val;
+  else filterType=val;
+  // 버튼 active 상태
+  el.closest('.filter-group').querySelectorAll('.btn-filter').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function getFilteredPeople(){
+  return ldData.people.filter(p=>{
+    // 개강 필터: cohort 필드에 "4월" 또는 "5월" 포함 여부
+    if(filterTerm!=='전체'){
+      const c=(p.cohort||'').toString();
+      if(!c.includes(filterTerm))return false;
+    }
+    // 구분 필터: cohort 첫 번째 값이 "청년" 또는 "협력교회"
+    if(filterType!=='전체'){
+      const c=(p.cohort||'').toString();
+      if(filterType==='청년'&&!c.includes('청년'))return false;
+      if(filterType==='협력교회'&&!c.includes('협력교회'))return false;
+    }
+    return true;
+  });
 }
 
 async function loadData(){
@@ -192,7 +238,6 @@ async function loadData(){
       ldData.regionList=d.regionList||[];
       ldData.regionOrder=d.regionOrder||[];
     }
-    // MTG regionList로 순서 보완
     if(!ldData.regionOrder.length){
       const r2=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${MTG_ID}&select=data`,{headers:SB_HDR});
       const d2=await r2.json();
@@ -215,9 +260,13 @@ async function saveData(){
 function render(){renderStageTable();renderMeetTables();}
 
 function renderStageTable(){
-  const people=ldData.people,regions=getOrderedRegions();
-  const COLS=14;
-  if(!people.length){document.getElementById('stageBody').innerHTML=`<tr><td colspan="${COLS}" style="padding:40px;text-align:center;color:var(--t3);font-family:'Noto Sans KR',sans-serif;font-weight:400">데이터가 없습니다</td></tr>`;document.getElementById('totalBadge').textContent='총 0명';return;}
+  const people=getFilteredPeople();
+  const regions=getOrderedRegions(people);
+  const COLS=15;
+  if(!people.length){
+    document.getElementById('stageBody').innerHTML=`<tr><td colspan="${COLS}" style="padding:40px;text-align:center;color:var(--t3);font-family:'Noto Sans KR',sans-serif;font-weight:400">데이터가 없습니다</td></tr>`;
+    document.getElementById('totalBadge').textContent='총 0명';return;
+  }
   const countMap={},totRow={total:0};STAGES.forEach(s=>totRow[s]=0);
   regions.forEach(r=>{countMap[r]={total:0};STAGES.forEach(s=>countMap[r][s]=0);});
   people.forEach(p=>{if(!p.region||!countMap[p.region])return;countMap[p.region][p.stage]=(countMap[p.region][p.stage]||0)+1;countMap[p.region].total++;totRow[p.stage]=(totRow[p.stage]||0)+1;totRow.total++;});
@@ -231,22 +280,23 @@ function renderStageTable(){
     return`<span class="${r>=100?'rate-ok':r>=70?'rate-warn':'rate-dp'}">${r}%</span>`;
   }
 
+  // 목표 합산
+  let totSE=0,totGH=0,totGD1=0,totGD2=0;
+  regions.forEach(r=>{const g=goals[r]||{};totSE+=g.SE||0;totGH+=g.H||0;totGD1+=g.D1||0;totGD2+=g.D2||0;});
+
   const rows=regions.map(r=>{
     const g=goals[r]||{};
     const gSE=g.SE||0,gH=g.H||0,gD1=g.D1||0,gD2=g.D2||0;
     const c=countMap[r];
-    // 합자% = H+D1+D2+B+CT 대비 목표합자
     const cH_up=c.H+c.D1+c.D2+c.B+c.CT;
-    // 육따기% = D1+D2+B+CT 대비 목표육따기
     const cD1_up=c.D1+c.D2+c.B+c.CT;
-    // 영따기% = D2+B+CT 대비 목표영따기
     const cD2_up=c.D2+c.B+c.CT;
     return`<tr>
       <td class="region-td">${r}</td>
       <td><span class="goal-cell" onclick="editGoal('${r}','SE',this)">${gSE||'—'}</span></td>
-      <td><span class="goal-cell" onclick="editGoal('${r}','H',this)">${gH||'—'}</span></td>
-      <td><span class="goal-cell" onclick="editGoal('${r}','D1',this)">${gD1||'—'}</span></td>
       <td><span class="goal-cell" onclick="editGoal('${r}','D2',this)">${gD2||'—'}</span></td>
+      <td><span class="goal-cell" onclick="editGoal('${r}','D1',this)">${gD1||'—'}</span></td>
+      <td><span class="goal-cell" onclick="editGoal('${r}','H',this)">${gH||'—'}</span></td>
       ${STAGES.map(s=>`<td style="color:${sc[s]}">${c[s]||0}</td>`).join('')}
       <td style="color:var(--acc-dk);font-weight:700">${c.total}</td>
       <td>${rateCell(cH_up,gH)}</td>
@@ -254,12 +304,24 @@ function renderStageTable(){
       <td>${rateCell(cD2_up,gD2)}</td>
     </tr>`;
   });
-  // 합계 row
+
+  // 합계 row (목표 합산 포함)
   const tot=totRow;
   const tH_up=tot.H+tot.D1+tot.D2+tot.B+tot.CT;
   const tD1_up=tot.D1+tot.D2+tot.B+tot.CT;
   const tD2_up=tot.D2+tot.B+tot.CT;
-  rows.push(`<tr class="total-row"><td class="region-td">청년회</td><td colspan="4"></td>${STAGES.map(s=>`<td>${tot[s]||0}</td>`).join('')}<td>${tot.total}</td><td colspan="3"></td></tr>`);
+  rows.push(`<tr class="total-row">
+    <td class="region-td">청년회</td>
+    <td>${totSE||'—'}</td>
+    <td>${totGD2||'—'}</td>
+    <td>${totGD1||'—'}</td>
+    <td>${totGH||'—'}</td>
+    ${STAGES.map(s=>`<td>${tot[s]||0}</td>`).join('')}
+    <td>${tot.total}</td>
+    <td>${rateCell(tH_up,totGH)}</td>
+    <td>${rateCell(tD1_up,totGD1)}</td>
+    <td>${rateCell(tD2_up,totGD2)}</td>
+  </tr>`);
   document.getElementById('stageBody').innerHTML=rows.join('');
 }
 
@@ -279,7 +341,8 @@ function editGoal(region,stage,el){
 }
 
 function renderMeetTables(){
-  const people=ldData.people,wrap=document.getElementById('meetWrap');
+  const people=getFilteredPeople();
+  const wrap=document.getElementById('meetWrap');
   if(!people.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--t3)">데이터가 없습니다</div>';return;}
   const tod=today(),d1=addDays(tod,1),d2=addDays(tod,2);
   const DATE_COLS=[
@@ -289,7 +352,7 @@ function renderMeetTables(){
     {key:'after',label:'그이후',date:null},
     {key:'none',label:'만남미정',date:null},
   ];
-  const regions=getOrderedRegions();
+  const regions=getOrderedRegions(people);
   let near3=0;
   people.forEach(p=>{if(p.nextDate&&(p.nextDate===tod||p.nextDate===d1||p.nextDate===d2))near3++;});
   document.getElementById('meetBadge').textContent=`3일 내 ${near3}명`;
@@ -311,7 +374,7 @@ function renderMeetTables(){
       const cells=DATE_COLS.map(c=>{
         const list=buckets[c.key]||[];
         if(!list.length)return`<td><span class="empty-dash">—</span></td>`;
-        const chips=list.map(p=>`<span class="chip chip-${p.purpose}">${(p.people||'').split('-')[0]||p.people}</span>`).join('');
+        const chips=list.map(p=>`<span class="chip chip-${p.purpose}">${p.people||''}</span>`).join('');
         return`<td><div class="chip-wrap">${chips}</div></td>`;
       }).join('');
       return`<tr><td class="region-td">${r}<div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rp.length}명</div></td>${cells}</tr>`;
