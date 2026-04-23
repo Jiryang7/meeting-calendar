@@ -213,9 +213,8 @@ function getFilteredPeople(){
   return ldData.people.filter(p=>{
     // 개강 필터: cohort 필드에 "4월" 또는 "5월" 포함 여부
     if(filterTerm!=='전체'){
-      const c=(p.cohort||'').toString();
-      if(!c.includes(filterTerm))return false;
-    }
+  if((p.term||'')!==filterTerm)return false;
+}
     // 구분 필터: cohort 첫 번째 값이 "청년" 또는 "협력교회"
     if(filterType!=='전체'){
       const c=(p.cohort||'').toString();
