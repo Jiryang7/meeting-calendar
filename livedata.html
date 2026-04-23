@@ -105,6 +105,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
         <thead>
           <tr>
             <th rowspan="2" style="background:#bde0f5;color:var(--t1)">지역</th>
+            <th colspan="4" style="background:#dbeafe;color:#1e40af">목표 (클릭해서 수정)</th>
             <th style="background:#e0f2fe;color:#0369a1">CH<div style="font-size:9px;font-weight:400">찾기</div></th>
             <th style="background:#ede9fe;color:#6d28d9">H<div style="font-size:9px;font-weight:400">합자</div></th>
             <th style="background:#fffbeb;color:#92400e">D1<div style="font-size:9px;font-weight:400">육따</div></th>
@@ -112,10 +113,23 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
             <th style="background:#ecfdf5;color:#065f46">B<div style="font-size:9px;font-weight:400">복</div></th>
             <th style="background:#eef2ff;color:#3730a3">CT<div style="font-size:9px;font-weight:400">센확</div></th>
             <th style="background:var(--acc-lt);color:var(--acc-dk)">합계</th>
-            <th style="background:#dbeafe;color:#1e40af">목표<div style="font-size:9px;font-weight:400">영따기</div></th>
-            <th style="background:#dbeafe;color:#1e40af">목표<div style="font-size:9px;font-weight:400">육따기</div></th>
-            <th style="background:#fef9c3;color:#854d0e">영따%</th>
-            <th style="background:#fef9c3;color:#854d0e">육따%</th>
+            <th colspan="3" style="background:#fef9c3;color:#854d0e">달성%</th>
+          </tr>
+          <tr>
+            <th style="background:#dbeafe;color:#1e40af;font-size:10px">센등</th>
+            <th style="background:#dbeafe;color:#1e40af;font-size:10px">합자</th>
+            <th style="background:#dbeafe;color:#1e40af;font-size:10px">육따기</th>
+            <th style="background:#dbeafe;color:#1e40af;font-size:10px">영따기</th>
+            <th style="background:#e0f2fe;color:#0369a1;font-size:9px"></th>
+            <th style="background:#ede9fe;color:#6d28d9;font-size:9px"></th>
+            <th style="background:#fffbeb;color:#92400e;font-size:9px"></th>
+            <th style="background:#fff7ed;color:#c2410c;font-size:9px"></th>
+            <th style="background:#ecfdf5;color:#065f46;font-size:9px"></th>
+            <th style="background:#eef2ff;color:#3730a3;font-size:9px"></th>
+            <th style="background:var(--acc-lt)"></th>
+            <th style="background:#fef9c3;color:#854d0e;font-size:10px">합자%</th>
+            <th style="background:#fef9c3;color:#854d0e;font-size:10px">육따%</th>
+            <th style="background:#fef9c3;color:#854d0e;font-size:10px">영따%</th>
           </tr>
         </thead>
         <tbody id="stageBody">
@@ -202,29 +216,50 @@ function render(){renderStageTable();renderMeetTables();}
 
 function renderStageTable(){
   const people=ldData.people,regions=getOrderedRegions();
-  if(!people.length){document.getElementById('stageBody').innerHTML='<tr><td colspan="12" style="padding:40px;text-align:center;color:var(--t3);font-family:\'Noto Sans KR\',sans-serif;font-weight:400">데이터가 없습니다</td></tr>';document.getElementById('totalBadge').textContent='총 0명';return;}
+  const COLS=14;
+  if(!people.length){document.getElementById('stageBody').innerHTML=`<tr><td colspan="${COLS}" style="padding:40px;text-align:center;color:var(--t3);font-family:'Noto Sans KR',sans-serif;font-weight:400">데이터가 없습니다</td></tr>`;document.getElementById('totalBadge').textContent='총 0명';return;}
   const countMap={},totRow={total:0};STAGES.forEach(s=>totRow[s]=0);
   regions.forEach(r=>{countMap[r]={total:0};STAGES.forEach(s=>countMap[r][s]=0);});
   people.forEach(p=>{if(!p.region||!countMap[p.region])return;countMap[p.region][p.stage]=(countMap[p.region][p.stage]||0)+1;countMap[p.region].total++;totRow[p.stage]=(totRow[p.stage]||0)+1;totRow.total++;});
   document.getElementById('totalBadge').textContent=`총 ${totRow.total}명`;
   const goals=ldData.goals||{};
-  const stageColors={CH:'#0369a1',H:'#6d28d9',D1:'#92400e',D2:'#c2410c',B:'#065f46',CT:'#3730a3'};
+  const sc={CH:'#0369a1',H:'#6d28d9',D1:'#92400e',D2:'#c2410c',B:'#065f46',CT:'#3730a3'};
+
+  function rateCell(cnt,goal){
+    if(!goal)return'<span style="color:var(--t3)">—</span>';
+    const r=Math.round(cnt/goal*100);
+    return`<span class="${r>=100?'rate-ok':r>=70?'rate-warn':'rate-dp'}">${r}%</span>`;
+  }
+
   const rows=regions.map(r=>{
-    const gD2=goals[r]?.D2||0,gD1=goals[r]?.D1||0;
-    const cD2=countMap[r].D2||0,cD1=countMap[r].D1||0;
-    const rD2=gD2?Math.round(cD2/gD2*100):null;
-    const rD1=gD1?Math.round(cD1/gD1*100):null;
+    const g=goals[r]||{};
+    const gSE=g.SE||0,gH=g.H||0,gD1=g.D1||0,gD2=g.D2||0;
+    const c=countMap[r];
+    // 합자% = H+D1+D2+B+CT 대비 목표합자
+    const cH_up=c.H+c.D1+c.D2+c.B+c.CT;
+    // 육따기% = D1+D2+B+CT 대비 목표육따기
+    const cD1_up=c.D1+c.D2+c.B+c.CT;
+    // 영따기% = D2+B+CT 대비 목표영따기
+    const cD2_up=c.D2+c.B+c.CT;
     return`<tr>
       <td class="region-td">${r}</td>
-      ${STAGES.map(s=>`<td style="color:${stageColors[s]}">${countMap[r][s]||0}</td>`).join('')}
-      <td style="color:var(--acc-dk)">${countMap[r].total}</td>
-      <td><span class="goal-cell" onclick="editGoal('${r}','D2',this)">${gD2||'—'}</span></td>
+      <td><span class="goal-cell" onclick="editGoal('${r}','SE',this)">${gSE||'—'}</span></td>
+      <td><span class="goal-cell" onclick="editGoal('${r}','H',this)">${gH||'—'}</span></td>
       <td><span class="goal-cell" onclick="editGoal('${r}','D1',this)">${gD1||'—'}</span></td>
-      <td>${rD2!==null?`<span class="${rD2>=100?'rate-ok':rD2>=70?'rate-warn':'rate-dp'}">${rD2}%</span>`:'<span style="color:var(--t3)">—</span>'}</td>
-      <td>${rD1!==null?`<span class="${rD1>=100?'rate-ok':rD1>=70?'rate-warn':'rate-dp'}">${rD1}%</span>`:'<span style="color:var(--t3)">—</span>'}</td>
+      <td><span class="goal-cell" onclick="editGoal('${r}','D2',this)">${gD2||'—'}</span></td>
+      ${STAGES.map(s=>`<td style="color:${sc[s]}">${c[s]||0}</td>`).join('')}
+      <td style="color:var(--acc-dk);font-weight:700">${c.total}</td>
+      <td>${rateCell(cH_up,gH)}</td>
+      <td>${rateCell(cD1_up,gD1)}</td>
+      <td>${rateCell(cD2_up,gD2)}</td>
     </tr>`;
   });
-  rows.push(`<tr class="total-row"><td class="region-td">청년회</td>${STAGES.map(s=>`<td>${totRow[s]||0}</td>`).join('')}<td>${totRow.total}</td><td colspan="4"></td></tr>`);
+  // 합계 row
+  const tot=totRow;
+  const tH_up=tot.H+tot.D1+tot.D2+tot.B+tot.CT;
+  const tD1_up=tot.D1+tot.D2+tot.B+tot.CT;
+  const tD2_up=tot.D2+tot.B+tot.CT;
+  rows.push(`<tr class="total-row"><td class="region-td">청년회</td><td colspan="4"></td>${STAGES.map(s=>`<td>${tot[s]||0}</td>`).join('')}<td>${tot.total}</td><td colspan="3"></td></tr>`);
   document.getElementById('stageBody').innerHTML=rows.join('');
 }
 
