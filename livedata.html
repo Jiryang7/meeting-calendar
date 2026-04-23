@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>보유현황 — Live Data</title>
+<title>보유데이터</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#e8f5fe;--white:#fff;--s2:#d4ecfa;--s3:#bfe0f5;
+  --bg:#e8f4fd;--white:#fff;--s2:#d4ecfa;--s3:#bfe0f5;
   --bd:#b3d4ea;--bd2:#8bbdd8;
   --t1:#0c2d42;--t2:#3a6a88;--t3:#7aaec8;
   --acc:#0ea5e9;--acc-dk:#0284c7;--acc-lt:#e0f2fe;--acc-md:#7dd3fc;--acc-tx:#0c4a6e;
@@ -18,11 +18,7 @@
   --stage-ch:#0ea5e9;--stage-h:#8b5cf6;--stage-d1:#f59e0b;--stage-d2:#f97316;--stage-b:#10b981;--stage-ct:#6366f1;
 }
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;font-size:14px}
-
-/* ── STRIPE ── */
 .stripe{height:3px;background:linear-gradient(90deg,var(--acc),var(--acc-md));position:fixed;top:0;left:0;right:0;z-index:300}
-
-/* ── HEADER ── */
 .hdr{height:54px;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;gap:10px;position:sticky;top:3px;z-index:200;background:rgba(255,255,255,.92);backdrop-filter:blur(8px)}
 .hdr-logo{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px;letter-spacing:-.03em;flex-shrink:0;color:var(--acc-dk)}
 .logo-dot{width:9px;height:9px;background:var(--acc);border-radius:50%}
@@ -33,121 +29,60 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .hdr-r{margin-left:auto;display:flex;gap:7px;align-items:center}
 .btn{background:var(--white);border:1px solid var(--bd2);color:var(--t1);border-radius:7px;padding:6px 13px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .13s}
 .btn:hover{border-color:var(--acc);background:var(--acc-lt)}
-.btn-acc{background:var(--acc);color:#fff;border-color:transparent;font-weight:700}
-.btn-acc:hover{background:var(--acc-dk)}
 .btn-sm{padding:4px 9px;font-size:11px}
-
-/* ── CONTENT ── */
-.content{max-width:1100px;margin:0 auto;padding:20px 20px 80px}
-
-/* ── SECTION ── */
-.section{margin-bottom:28px}
+.content{max-width:1200px;margin:0 auto;padding:20px 20px 80px}
+.section{margin-bottom:32px}
 .section-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .section-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.02em}
-.section-sub{font-size:11px;color:var(--t3)}
 .section-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--acc-lt);color:var(--acc-tx);border:1px solid var(--acc-md);font-weight:700;font-family:'DM Mono',monospace}
-
-/* ── TABLE WRAPPER ── */
 .table-wrap{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:auto;box-shadow:0 2px 12px rgba(14,165,233,.08)}
 
-/* ── TABLE 1: 단계 현황 ── */
+/* 표1 */
 .stage-table{width:100%;border-collapse:collapse;font-size:12px}
-.stage-table th{padding:9px 12px;font-size:10px;font-weight:700;color:var(--t3);text-align:center;border-bottom:2px solid var(--bd);letter-spacing:.06em;text-transform:uppercase;background:var(--s2);white-space:nowrap}
-.stage-table th.left{text-align:left}
-.stage-table td{padding:8px 12px;border-bottom:1px solid var(--bd);text-align:center;vertical-align:middle}
-.stage-table tr:last-child td{border-bottom:none;font-weight:700;background:var(--acc-lt)}
-.stage-table tr:hover:not(:last-child) td{background:var(--s2)}
-
-.region-cell{text-align:left;font-weight:700;font-size:13px;white-space:nowrap}
-.count-cell{font-family:'DM Mono',monospace;font-weight:700;font-size:13px}
-.goal-cell{font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);cursor:pointer;border-radius:4px;padding:2px 6px;transition:all .13s;min-width:32px}
-.goal-cell:hover{background:var(--acc-lt);color:var(--acc-dk)}
+.stage-table th{padding:8px 10px;font-size:11px;font-weight:700;text-align:center;border:1px solid var(--bd);white-space:nowrap}
+.stage-table td{padding:8px 10px;border:1px solid var(--bd);text-align:center;font-family:'DM Mono',monospace;font-weight:700;font-size:13px;vertical-align:middle}
+.stage-table td.region-td{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:13px;background:#f0f9ff;text-align:center}
+.stage-table tr.total-row td{background:var(--acc-lt);font-weight:700;color:var(--acc-dk)}
+.stage-table tr.total-row td.region-td{background:var(--acc);color:#fff}
+.goal-cell{cursor:pointer;border-radius:4px;padding:2px 4px;transition:all .13s;min-width:28px;display:inline-block}
+.goal-cell:hover{background:var(--acc-lt);color:var(--acc-dk);outline:1px dashed var(--acc)}
 .goal-cell.editing{background:var(--acc-lt);outline:2px solid var(--acc);color:var(--t1)}
+.rate-ok{color:var(--ok);background:var(--ok-bg);border-radius:4px;padding:2px 6px}
+.rate-warn{color:var(--warn);background:var(--warn-bg);border-radius:4px;padding:2px 6px}
+.rate-dp{color:var(--dp);background:var(--dp-bg);border-radius:4px;padding:2px 6px}
 
-/* stage color dots */
-.stage-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle;flex-shrink:0}
-
-/* rate cell */
-.rate-cell{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px}
-.rate-ok{background:var(--ok-bg);color:var(--ok)}
-.rate-warn{background:var(--warn-bg);color:var(--warn)}
-.rate-dp{background:var(--dp-bg);color:var(--dp)}
-
-/* ── TABLE 2: 만남 현황 ── */
+/* 표2 */
+.meet-section{margin-bottom:16px}
+.stage-meet-hdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer;user-select:none}
+.stage-meet-title{font-size:14px;font-weight:700;color:#fff}
+.stage-meet-cnt{font-family:'DM Mono',monospace;font-size:11px;background:rgba(255,255,255,.25);padding:2px 8px;border-radius:10px;color:#fff}
+.stage-meet-tog{margin-left:auto;font-size:11px;color:rgba(255,255,255,.7)}
 .meet-table{width:100%;border-collapse:collapse;font-size:12px}
-.meet-table th{padding:9px 14px;font-size:10px;font-weight:700;color:var(--t3);text-align:center;border-bottom:2px solid var(--bd);letter-spacing:.06em;text-transform:uppercase;background:var(--s2);white-space:nowrap}
-.meet-table th.left{text-align:left}
-.meet-table td{padding:8px 12px;border-bottom:1px solid var(--bd);vertical-align:top;text-align:center}
-.meet-table tr:last-child td{border-bottom:none;font-weight:700;background:var(--acc-lt)}
-.meet-table tr:hover:not(:last-child) td{background:var(--s2)}
+.meet-table th{padding:8px 10px;font-size:10px;font-weight:700;text-align:center;border:1px solid var(--bd);white-space:nowrap;letter-spacing:.04em}
+.meet-table td{padding:7px 10px;border:1px solid var(--bd);text-align:center;vertical-align:middle}
+.meet-table td.region-td{font-weight:700;font-size:12px;background:#f0f9ff;text-align:center;white-space:nowrap}
+.meet-table tr.total-row td{background:var(--acc-lt);font-weight:700;font-family:'DM Mono',monospace}
+.meet-table tr.total-row td.region-td{background:var(--acc);color:#fff}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:2px;justify-content:center}
+.chip{font-size:10px;padding:1px 6px;border-radius:8px;white-space:nowrap;border:1px solid}
+.chip-상담{background:#ede9fe;color:#6d28d9;border-color:#c4b5fd}
+.chip-영따{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
+.chip-육따{background:#fef9c3;color:#854d0e;border-color:#fde047}
+.chip-복음{background:#dcfce7;color:#166534;border-color:#86efac}
+.chip-기타{background:var(--s2);color:var(--t2);border-color:var(--bd)}
+.empty-dash{color:var(--t3)}
 
-.date-hdr{font-size:12px;font-weight:700;color:var(--t1);display:block}
-.date-sub{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace}
-.today-hdr{color:var(--acc-dk)}
-
-/* person chips */
-.person-group{display:flex;flex-direction:column;gap:3px;align-items:center}
-.person-chip{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--s2);color:var(--t2);border:1px solid var(--bd);white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
-.person-chip.purpose-상담{background:#ede9fe;color:#6d28d9;border-color:#c4b5fd}
-.person-chip.purpose-영따{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
-.person-chip.purpose-육따{background:#fef9c3;color:#854d0e;border-color:#fde047}
-.person-chip.purpose-복음{background:#dcfce7;color:#166534;border-color:#86efac}
-.person-chip.purpose-기타{background:var(--s2);color:var(--t2);border-color:var(--bd)}
-.empty-cell{color:var(--t3);font-size:11px}
-
-/* total row */
-.total-num{font-family:'DM Mono',monospace;font-weight:700;font-size:13px;color:var(--acc-dk)}
-
-/* ── INPUT AREA ── */
-.input-section{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:24px;box-shadow:0 2px 12px rgba(14,165,233,.08)}
-.input-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--s2);border-bottom:1px solid var(--bd)}
-.input-title{font-size:13px;font-weight:700;color:var(--t1)}
-.input-sub{font-size:11px;color:var(--t3)}
-.input-body{padding:14px 16px;display:flex;gap:10px;align-items:flex-start}
-.region-sel{background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:8px 11px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--t1);outline:none;cursor:pointer;min-width:100px}
-.region-sel:focus{border-color:var(--acc)}
-textarea.input-ta{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--t1);outline:none;resize:none;min-height:90px;line-height:1.8}
-textarea.input-ta:focus{border-color:var(--acc);background:var(--acc-lt)}
-textarea.input-ta::placeholder{color:var(--t3)}
-
-/* ── LEGEND ── */
-.legend{display:flex;flex-wrap:wrap;gap:5px 12px;padding:10px 14px;background:var(--acc-lt);border-top:1px solid var(--acc-md);font-size:11px;color:var(--acc-tx)}
-.leg-item{display:flex;align-items:center;gap:4px}
-
-/* ── SPIN ── */
-.spin{width:13px;height:13px;border:2px solid rgba(14,165,233,.2);border-top-color:var(--acc);border-radius:50%;animation:sp .65s linear infinite;display:inline-block;vertical-align:middle;margin-right:5px}
+.spin{width:13px;height:13px;border:2px solid rgba(14,165,233,.2);border-top-color:var(--acc);border-radius:50%;animation:sp .65s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
-
-/* ── TOAST ── */
 .toast-wrap{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
-.toast{background:var(--t1);color:#fff;border-radius:20px;padding:9px 20px;font-size:12px;font-family:'DM Mono',monospace;white-space:nowrap;opacity:0;transition:opacity .2s;text-align:center}
+.toast{background:var(--t1);color:#fff;border-radius:20px;padding:9px 20px;font-size:12px;font-family:'DM Mono',monospace;white-space:nowrap;opacity:0;transition:opacity .2s}
 .toast.show{opacity:1}
-
-/* ── EMPTY ── */
-.empty-state{text-align:center;padding:50px 20px;color:var(--t3)}
-.empty-icon{font-size:36px;margin-bottom:10px}
-
-/* ── SYNC STATUS ── */
-.sync-bar{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t3);padding:8px 16px;border-top:1px solid var(--bd);font-family:'DM Mono',monospace}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0}
-.sync-dot.ok{background:var(--ok)}
-.sync-dot.err{background:var(--dp)}
-
-@media(max-width:640px){
-  .content{padding:12px 10px 70px}
-  .hdr-tabs{margin-left:4px}
-  .hdr-tab{padding:4px 8px;font-size:11px}
-  .stage-table,.meet-table{font-size:11px}
-  .input-body{flex-direction:column}
-}
 </style>
 </head>
 <body>
 <div class="stripe"></div>
-
-<!-- HEADER -->
 <div class="hdr">
-  <div class="hdr-logo"><div class="logo-dot"></div>만남 캘린더</div>
+  <div class="hdr-logo"><div class="logo-dot"></div>보유데이터</div>
   <div class="hdr-tabs">
     <a href="app.html" class="hdr-tab">📅 만캘</a>
     <a href="livedata.html" class="hdr-tab active">📊 Live Data</a>
@@ -158,411 +93,224 @@ textarea.input-ta::placeholder{color:var(--t3)}
   </div>
 </div>
 
-<!-- CONTENT -->
 <div class="content">
-
-  <!-- 데이터 입력 -->
-  <div class="input-section">
-    <div class="input-hdr">
-      <div>
-        <div class="input-title">📋 보유 데이터 입력</div>
-        <div class="input-sub">지역 선택 후 텍스트 붙여넣기 → 자동 반영</div>
-      </div>
-      <button class="btn btn-acc btn-sm" onclick="submitInput()">반영하기</button>
-    </div>
-    <div class="input-body">
-      <select class="region-sel" id="inputRegion">
-        <option value="">지역 선택</option>
-      </select>
-      <textarea class="input-ta" id="inputText"
-        placeholder="개강/단계/팀/섭외방식/섭-인-교/만남목적/다음만남일&#10;청년/4.D1/손자/이효/김수-손자-미정/영따/4.17(금)&#10;청년/2.H/..."></textarea>
-    </div>
-    <div class="legend">
-      <span style="font-weight:700;margin-right:4px">형식:</span>
-      <span class="leg-item">개강/단계/팀/섭외방식/섭-인-교/만남목적/다음만남일</span>
-      <span class="leg-item" style="color:var(--t3)">· 날짜: 4-17 또는 4.17</span>
-    </div>
-  </div>
-
-  <!-- 표1: 단계 현황 -->
   <div class="section">
     <div class="section-hdr">
-      <div class="section-title">📈 단계별 보유 현황</div>
+      <div class="section-title">📈 단계별 보유현황</div>
       <div class="section-badge" id="totalBadge">총 0명</div>
-      <div class="section-sub" style="margin-left:4px">목표 숫자 클릭해서 수정 가능</div>
+      <span style="font-size:11px;color:var(--t3)">목표 숫자 클릭해서 수정 가능</span>
     </div>
     <div class="table-wrap">
-      <table class="stage-table" id="stageTable">
+      <table class="stage-table">
         <thead>
           <tr>
-            <th class="left">지역</th>
-            <th><span class="stage-dot" style="background:var(--stage-ch)"></span>CH</th>
-            <th><span class="stage-dot" style="background:var(--stage-h)"></span>H</th>
-            <th><span class="stage-dot" style="background:var(--stage-d1)"></span>D1</th>
-            <th><span class="stage-dot" style="background:var(--stage-d2)"></span>D2</th>
-            <th><span class="stage-dot" style="background:var(--stage-b)"></span>B</th>
-            <th><span class="stage-dot" style="background:var(--stage-ct)"></span>CT</th>
-            <th>합계</th>
-            <th>목표<br><span style="font-size:9px;font-weight:400">(영따기)</span></th>
-            <th>목표<br><span style="font-size:9px;font-weight:400">(육따기)</span></th>
-            <th>영따%</th>
-            <th>육따%</th>
+            <th rowspan="2" style="background:#bde0f5;color:var(--t1)">지역</th>
+            <th style="background:#e0f2fe;color:#0369a1">CH<div style="font-size:9px;font-weight:400">찾기</div></th>
+            <th style="background:#ede9fe;color:#6d28d9">H<div style="font-size:9px;font-weight:400">합자</div></th>
+            <th style="background:#fffbeb;color:#92400e">D1<div style="font-size:9px;font-weight:400">육따</div></th>
+            <th style="background:#fff7ed;color:#c2410c">D2<div style="font-size:9px;font-weight:400">영따</div></th>
+            <th style="background:#ecfdf5;color:#065f46">B<div style="font-size:9px;font-weight:400">복</div></th>
+            <th style="background:#eef2ff;color:#3730a3">CT<div style="font-size:9px;font-weight:400">센확</div></th>
+            <th style="background:var(--acc-lt);color:var(--acc-dk)">합계</th>
+            <th style="background:#dbeafe;color:#1e40af">목표<div style="font-size:9px;font-weight:400">영따기</div></th>
+            <th style="background:#dbeafe;color:#1e40af">목표<div style="font-size:9px;font-weight:400">육따기</div></th>
+            <th style="background:#fef9c3;color:#854d0e">영따%</th>
+            <th style="background:#fef9c3;color:#854d0e">육따%</th>
           </tr>
         </thead>
         <tbody id="stageBody">
-          <tr><td colspan="12" style="padding:40px;text-align:center;color:var(--t3)">데이터가 없습니다</td></tr>
+          <tr><td colspan="12" style="padding:40px;text-align:center;color:var(--t3);font-family:'Noto Sans KR',sans-serif;font-weight:400">데이터가 없습니다</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- 표2: 만남 일정 현황 -->
   <div class="section">
     <div class="section-hdr">
-      <div class="section-title">📅 만남 일정 현황</div>
-      <div class="section-badge" id="dateBadge" style="background:var(--ok-bg);color:var(--ok);border-color:var(--ok-bd)">오늘 기준</div>
+      <div class="section-title">📅 만남 현황</div>
+      <div class="section-badge" id="meetBadge">오늘 기준</div>
     </div>
-    <div class="table-wrap">
-      <table class="meet-table" id="meetTable">
-        <thead id="meetHead"></thead>
-        <tbody id="meetBody">
-          <tr><td colspan="6" style="padding:40px;text-align:center;color:var(--t3)">데이터가 없습니다</td></tr>
-        </tbody>
-      </table>
+    <div id="meetWrap">
+      <div style="padding:40px;text-align:center;color:var(--t3)">데이터가 없습니다</div>
     </div>
   </div>
-
 </div>
 
 <div class="toast-wrap"><div class="toast" id="toast"></div></div>
 
 <script>
-/* ═══ CONFIG ═══ */
 const SB_URL='https://zjkrvkaakrhaptwbqfzo.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpqa3J2a2Fha3JoYXB0d2JxZnpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1ODc0MjgsImV4cCI6MjA5MjE2MzQyOH0.UQwt3pagP8D7BJKfyr8LDeb3XytYVYU8t6YLvkoGOWw';
 const SB_HDR={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
-const LD_ID='00000000-0000-0000-0000-000000000002'; // Live Data 전용 row
-
-/* ═══ STATE ═══ */
-let ldData={people:[],goals:{},regionList:[]};
-
+const LD_ID='00000000-0000-0000-0000-000000000002';
+const MTG_ID='00000000-0000-0000-0000-000000000001';
 const STAGES=['CH','H','D1','D2','B','CT'];
+const STAGE_LABELS={CH:'찾기',H:'합자',D1:'육따',D2:'영따',B:'복',CT:'센확'};
 const STAGE_COLORS={CH:'var(--stage-ch)',H:'var(--stage-h)',D1:'var(--stage-d1)',D2:'var(--stage-d2)',B:'var(--stage-b)',CT:'var(--stage-ct)'};
+const STAGE_TXT={CH:'#0369a1',H:'#6d28d9',D1:'#92400e',D2:'#c2410c',B:'#065f46',CT:'#3730a3'};
 
-/* ═══ AUTH ═══ */
+let ldData={people:[],goals:{},regionList:[],regionOrder:[]};
+
 function getSession(){try{return JSON.parse(localStorage.getItem('mtg-user'));}catch{return null;}}
 function doLogout(){localStorage.removeItem('mtg-user');localStorage.removeItem('mtg-enc-key');window.location.href='index.html';}
 if(!getSession()){window.location.href='index.html';}
 
-/* ═══ DATE HELPERS ═══ */
-function parseDate(raw){
-  if(!raw)return null;
-  raw=raw.toString().trim().replace(/[()월금토일화수목]/g,'');
-  const m=raw.match(/^(\d{1,2})[.\-\/](\d{1,2})/);
-  if(m){const y=new Date().getFullYear();return `${y}-${String(+m[1]).padStart(2,'0')}-${String(+m[2]).padStart(2,'0')}`;}
-  if(/^\d{4}-\d{2}-\d{2}$/.test(raw))return raw;
-  return null;
-}
 function today(){return new Date().toISOString().slice(0,10);}
-function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r.toISOString().slice(0,10);}
-function fmtDate(d){const r=new Date(d+'T00:00:00');return `${r.getMonth()+1}/${r.getDate()}`;}
+function addDays(d,n){const r=new Date(d+'T00:00:00');r.setDate(r.getDate()+n);return r.toISOString().slice(0,10);}
+function fmtDate(d){const r=new Date(d+'T00:00:00');return`${r.getMonth()+1}/${r.getDate()}`;}
 function getDow(d){return['일','월','화','수','목','금','토'][new Date(d+'T00:00:00').getDay()];}
 
-/* ═══ STAGE PARSE ═══ */
-function parseStage(raw){
-  if(!raw)return'기타';
-  raw=raw.toString().trim().toUpperCase();
-  for(const s of STAGES){if(raw.includes(s))return s;}
-  return raw.replace(/^\d+\./,'').trim()||'기타';
+function getOrderedRegions(){
+  const all=[...new Set(ldData.people.map(p=>p.region).filter(Boolean))];
+  const order=ldData.regionOrder||[];
+  return[...order.filter(r=>all.includes(r)),...all.filter(r=>!order.includes(r))];
 }
 
-/* ═══ PURPOSE NORMALIZE ═══ */
-function normPurpose(raw){
-  if(!raw)return'기타';
-  if(raw.includes('상담'))return'상담';
-  if(raw.includes('영따'))return'영따';
-  if(raw.includes('육따'))return'육따';
-  if(raw.includes('복음')||raw.includes('복'))return'복음';
-  return'기타';
-}
-
-/* ═══ PARSE TEXT INPUT ═══ */
-function parseLines(text){
-  return text.split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
-    const p=line.split('/');
-    return{
-      cohort:p[0]||'',
-      stage:parseStage(p[1]||''),
-      team:p[2]||'',
-      method:p[3]||'',
-      people:p[4]||'',
-      purpose:normPurpose(p[5]||''),
-      nextDate:parseDate(p[6]||'')
-    };
-  }).filter(m=>m.people);
-}
-
-/* ═══ DEDUP KEY ═══ */
-function pkey(p){return `${p.people}|${p.region}`;}
-
-/* ═══ LOAD ═══ */
 async function loadData(){
   document.getElementById('syncIcon').innerHTML='<span class="spin"></span>';
   try{
-    const resp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}&select=data`,{headers:SB_HDR});
-    const rows=await resp.json();
-    if(rows&&rows[0]&&rows[0].data){
-      const d=rows[0].data;
+    const r1=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}&select=data`,{headers:SB_HDR});
+    const d1=await r1.json();
+    if(d1&&d1[0]&&d1[0].data){
+      const d=d1[0].data;
       ldData.people=d.people||[];
       ldData.goals=d.goals||{};
       ldData.regionList=d.regionList||[];
+      ldData.regionOrder=d.regionOrder||[];
     }
-    populateRegionSel();
+    // MTG regionList로 순서 보완
+    if(!ldData.regionOrder.length){
+      const r2=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${MTG_ID}&select=data`,{headers:SB_HDR});
+      const d2=await r2.json();
+      if(d2&&d2[0]&&d2[0].data) ldData.regionOrder=d2[0].data.regionList||[];
+    }
     render();
   }catch(e){showToast('로드 오류: '+e.message);}
   document.getElementById('syncIcon').textContent='↺';
 }
 
-/* ═══ SAVE ═══ */
 async function saveData(){
   try{
-    // row 존재 확인
-    const chk=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}&select=id`,{headers:SB_HDR});
-    const rows=await chk.json();
-    if(!rows||!rows.length){
-      // INSERT
-      await fetch(`${SB_URL}/rest/v1/meetings`,{
-        method:'POST',
-        headers:{...SB_HDR,'Prefer':'return=minimal'},
-        body:JSON.stringify({id:LD_ID,data:ldData})
-      });
-    } else {
-      // PATCH
-      await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}`,{
-        method:'PATCH',
-        headers:{...SB_HDR,'Prefer':'return=minimal'},
-        body:JSON.stringify({data:ldData})
-      });
-    }
-  }catch(e){showToast('저장 오류: '+e.message);}
+    await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}`,{
+      method:'PATCH',headers:{...SB_HDR,'Prefer':'return=minimal'},
+      body:JSON.stringify({data:ldData})
+    });
+  }catch(e){showToast('저장 오류');}
 }
 
-/* ═══ SUBMIT INPUT ═══ */
-async function submitInput(){
-  const region=document.getElementById('inputRegion').value;
-  const text=document.getElementById('inputText').value.trim();
-  if(!region){showToast('지역을 선택해주세요');return;}
-  if(!text){showToast('데이터를 입력해주세요');return;}
+function render(){renderStageTable();renderMeetTables();}
 
-  const incoming=parseLines(text).map(p=>({...p,region}));
-  if(!incoming.length){showToast('파싱된 데이터가 없습니다');return;}
-
-  // 같은 지역 기존 데이터 교체 (덮어쓰기)
-  ldData.people=ldData.people.filter(p=>p.region!==region);
-  ldData.people.push(...incoming);
-
-  // regionList 업데이트
-  if(!ldData.regionList.includes(region))ldData.regionList.push(region);
-
-  document.getElementById('inputText').value='';
-  await saveData();
-  render();
-  showToast(`✓ ${region} ${incoming.length}명 반영됨`);
-}
-
-/* ═══ POPULATE REGION SELECT ═══ */
-function populateRegionSel(){
-  const sel=document.getElementById('inputRegion');
-  // 만캘의 regionList도 참고
-  const regions=[...new Set([...ldData.regionList,...ldData.people.map(p=>p.region).filter(Boolean)])].sort();
-  sel.innerHTML='<option value="">지역 선택</option>'+regions.map(r=>`<option value="${r}">${r}</option>`).join('');
-}
-
-/* ═══ RENDER ═══ */
-function render(){
-  renderStageTable();
-  renderMeetTable();
-  populateRegionSel();
-}
-
-/* ═══ RENDER TABLE 1: 단계 현황 ═══ */
 function renderStageTable(){
-  const people=ldData.people;
-  const regions=[...new Set(people.map(p=>p.region).filter(Boolean))].sort();
-
-  if(!people.length){
-    document.getElementById('stageBody').innerHTML='<tr><td colspan="12" style="padding:40px;text-align:center;color:var(--t3)">데이터가 없습니다</td></tr>';
-    document.getElementById('totalBadge').textContent='총 0명';
-    return;
-  }
-
-  // counts
-  const countMap={};
-  regions.forEach(r=>{
-    countMap[r]={};
-    STAGES.forEach(s=>countMap[r][s]=0);
-    countMap[r].total=0;
-  });
-  people.forEach(p=>{
-    if(!p.region||!countMap[p.region])return;
-    countMap[p.region][p.stage]=(countMap[p.region][p.stage]||0)+1;
-    countMap[p.region].total++;
-  });
-
-  const totalAll=people.length;
-  document.getElementById('totalBadge').textContent=`총 ${totalAll}명`;
-
-  // totals row
-  const totRow={};STAGES.forEach(s=>totRow[s]=0);totRow.total=0;
-  regions.forEach(r=>{STAGES.forEach(s=>totRow[s]+=countMap[r][s]||0);totRow.total+=countMap[r].total;});
-
+  const people=ldData.people,regions=getOrderedRegions();
+  if(!people.length){document.getElementById('stageBody').innerHTML='<tr><td colspan="12" style="padding:40px;text-align:center;color:var(--t3);font-family:\'Noto Sans KR\',sans-serif;font-weight:400">데이터가 없습니다</td></tr>';document.getElementById('totalBadge').textContent='총 0명';return;}
+  const countMap={},totRow={total:0};STAGES.forEach(s=>totRow[s]=0);
+  regions.forEach(r=>{countMap[r]={total:0};STAGES.forEach(s=>countMap[r][s]=0);});
+  people.forEach(p=>{if(!p.region||!countMap[p.region])return;countMap[p.region][p.stage]=(countMap[p.region][p.stage]||0)+1;countMap[p.region].total++;totRow[p.stage]=(totRow[p.stage]||0)+1;totRow.total++;});
+  document.getElementById('totalBadge').textContent=`총 ${totRow.total}명`;
   const goals=ldData.goals||{};
-
+  const stageColors={CH:'#0369a1',H:'#6d28d9',D1:'#92400e',D2:'#c2410c',B:'#065f46',CT:'#3730a3'};
   const rows=regions.map(r=>{
-    const goalD2=goals[r]?.D2||0;
-    const goalD1=goals[r]?.D1||0;
-    const cntD2=countMap[r].D2||0;
-    const cntD1=countMap[r].D1||0;
-    const rateD2=goalD2?Math.round(cntD2/goalD2*100):null;
-    const rateD1=goalD1?Math.round(cntD1/goalD1*100):null;
-
+    const gD2=goals[r]?.D2||0,gD1=goals[r]?.D1||0;
+    const cD2=countMap[r].D2||0,cD1=countMap[r].D1||0;
+    const rD2=gD2?Math.round(cD2/gD2*100):null;
+    const rD1=gD1?Math.round(cD1/gD1*100):null;
     return`<tr>
-      <td class="region-cell">${r}</td>
-      ${STAGES.map(s=>`<td class="count-cell" style="color:${STAGE_COLORS[s]}">${countMap[r][s]||0}</td>`).join('')}
-      <td class="count-cell" style="font-weight:700">${countMap[r].total}</td>
-      <td><span class="goal-cell" onclick="editGoal('${r}','D2',this)" data-region="${r}" data-stage="D2">${goalD2||'—'}</span></td>
-      <td><span class="goal-cell" onclick="editGoal('${r}','D1',this)" data-region="${r}" data-stage="D1">${goalD1||'—'}</span></td>
-      <td>${rateD2!==null?`<span class="rate-cell ${rateD2>=100?'rate-ok':rateD2>=70?'rate-warn':'rate-dp'}">${rateD2}%</span>`:'<span style="color:var(--t3)">—</span>'}</td>
-      <td>${rateD1!==null?`<span class="rate-cell ${rateD1>=100?'rate-ok':rateD1>=70?'rate-warn':'rate-dp'}">${rateD1}%</span>`:'<span style="color:var(--t3)">—</span>'}</td>
+      <td class="region-td">${r}</td>
+      ${STAGES.map(s=>`<td style="color:${stageColors[s]}">${countMap[r][s]||0}</td>`).join('')}
+      <td style="color:var(--acc-dk)">${countMap[r].total}</td>
+      <td><span class="goal-cell" onclick="editGoal('${r}','D2',this)">${gD2||'—'}</span></td>
+      <td><span class="goal-cell" onclick="editGoal('${r}','D1',this)">${gD1||'—'}</span></td>
+      <td>${rD2!==null?`<span class="${rD2>=100?'rate-ok':rD2>=70?'rate-warn':'rate-dp'}">${rD2}%</span>`:'<span style="color:var(--t3)">—</span>'}</td>
+      <td>${rD1!==null?`<span class="${rD1>=100?'rate-ok':rD1>=70?'rate-warn':'rate-dp'}">${rD1}%</span>`:'<span style="color:var(--t3)">—</span>'}</td>
     </tr>`;
   });
-
-  // 합계 row
-  rows.push(`<tr>
-    <td class="region-cell">합계</td>
-    ${STAGES.map(s=>`<td class="count-cell">${totRow[s]}</td>`).join('')}
-    <td class="count-cell">${totRow.total}</td>
-    <td colspan="4"></td>
-  </tr>`);
-
+  rows.push(`<tr class="total-row"><td class="region-td">청년회</td>${STAGES.map(s=>`<td>${totRow[s]||0}</td>`).join('')}<td>${totRow.total}</td><td colspan="4"></td></tr>`);
   document.getElementById('stageBody').innerHTML=rows.join('');
 }
 
-/* ═══ GOAL EDIT ═══ */
 function editGoal(region,stage,el){
-  const current=(ldData.goals[region]?.[stage])||'';
-  el.classList.add('editing');
-  el.contentEditable='true';
-  el.focus();
-  // select all
+  el.classList.add('editing');el.contentEditable='true';el.focus();
   const range=document.createRange();range.selectNodeContents(el);
   const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
-
   function finish(){
-    el.contentEditable='false';
-    el.classList.remove('editing');
+    el.contentEditable='false';el.classList.remove('editing');
     const val=parseInt(el.textContent)||0;
     if(!ldData.goals[region])ldData.goals[region]={};
-    ldData.goals[region][stage]=val;
-    el.textContent=val||'—';
-    saveData();
-    renderStageTable();
+    ldData.goals[region][stage]=val;el.textContent=val||'—';
+    saveData();renderStageTable();
   }
   el.onblur=finish;
-  el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();finish();}if(e.key==='Escape'){el.textContent=current||'—';finish();}};
+  el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();finish();}if(e.key==='Escape')finish();};
 }
 
-/* ═══ RENDER TABLE 2: 만남 현황 ═══ */
-function renderMeetTable(){
-  const people=ldData.people;
-  const regions=[...new Set(people.map(p=>p.region).filter(Boolean))].sort();
-
-  const tod=today();
-  const d1=addDays(tod,1);
-  const d2=addDays(tod,2);
-
-  // date columns: 오늘, 내일, 모레, 그이후, 미정/과거
-  const cols=[
-    {key:'today', label:'오늘', date:tod, isToday:true},
-    {key:'d1',    label:'내일', date:d1},
-    {key:'d2',    label:'모레', date:d2},
-    {key:'after', label:'그이후'},
-    {key:'none',  label:'미정/과거'},
+function renderMeetTables(){
+  const people=ldData.people,wrap=document.getElementById('meetWrap');
+  if(!people.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--t3)">데이터가 없습니다</div>';return;}
+  const tod=today(),d1=addDays(tod,1),d2=addDays(tod,2);
+  const DATE_COLS=[
+    {key:'today',label:'오늘',date:tod,isToday:true},
+    {key:'d1',label:'내일',date:d1},
+    {key:'d2',label:'모레',date:d2},
+    {key:'after',label:'그이후',date:null},
+    {key:'none',label:'만남미정',date:null},
   ];
+  const regions=getOrderedRegions();
+  let near3=0;
+  people.forEach(p=>{if(p.nextDate&&(p.nextDate===tod||p.nextDate===d1||p.nextDate===d2))near3++;});
+  document.getElementById('meetBadge').textContent=`3일 내 ${near3}명`;
 
-  // build head
-  const headCols=cols.map(c=>`<th>
-    <span class="date-hdr ${c.isToday?'today-hdr':''}">${c.label}</span>
-    ${c.date?`<span class="date-sub">${fmtDate(c.date)}(${getDow(c.date)})</span>`:''}
-  </th>`).join('');
-  document.getElementById('meetHead').innerHTML=`<tr><th class="left">지역</th>${headCols}<th>합계</th></tr>`;
-
-  if(!people.length){
-    document.getElementById('meetBody').innerHTML='<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--t3)">데이터가 없습니다</td></tr>';
-    return;
-  }
-
-  // totals
-  const colTots={today:0,d1:0,d2:0,after:0,none:0,total:0};
-
-  const rows=regions.map(r=>{
-    const rp=people.filter(p=>p.region===r);
-    const buckets={today:[],d1:[],d2:[],after:[],none:[]};
-
-    rp.forEach(p=>{
-      const nd=p.nextDate;
-      if(!nd||nd<tod){buckets.none.push(p);}
-      else if(nd===tod){buckets.today.push(p);}
-      else if(nd===d1){buckets.d1.push(p);}
-      else if(nd===d2){buckets.d2.push(p);}
-      else if(nd>d2){buckets.after.push(p);}
-      else{buckets.none.push(p);}
-    });
-
-    Object.keys(colTots).forEach(k=>{if(k!=='total')colTots[k]+=(buckets[k]||[]).length;});
-    colTots.total+=rp.length;
-
-    const cells=cols.map(c=>{
-      const list=buckets[c.key]||[];
-      if(!list.length)return`<td><span class="empty-cell">—</span></td>`;
-      // group by purpose
-      const byPurpose={};
-      list.forEach(p=>{if(!byPurpose[p.purpose])byPurpose[p.purpose]=[];byPurpose[p.purpose].push(p);});
-      const chips=Object.entries(byPurpose).map(([pur,ps])=>
-        ps.map(p=>{
-          const name=p.people.split('-')[0]||p.people;
-          return`<span class="person-chip purpose-${pur}" title="${p.people}">${name}<span style="font-size:9px;opacity:.7;margin-left:2px">${pur}</span></span>`;
-        }).join('')
-      ).join('');
-      return`<td><div class="person-group">${chips}</div></td>`;
-    }).join('');
-
-    return`<tr>
-      <td class="region-cell">${r}<div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px">${rp.length}명</div></td>
-      ${cells}
-      <td class="total-num">${rp.length}</td>
-    </tr>`;
-  });
-
-  // 합계 row
-  const totCells=cols.map(c=>`<td class="total-num">${colTots[c.key]||0}</td>`).join('');
-  rows.push(`<tr><td class="region-cell">합계</td>${totCells}<td class="total-num">${colTots.total}</td></tr>`);
-
-  document.getElementById('meetBody').innerHTML=rows.join('');
-
-  // update badge
-  const todCount=colTots.today+colTots.d1+colTots.d2;
-  document.getElementById('dateBadge').textContent=`3일 내 ${todCount}명`;
+  const html=STAGES.map(stage=>{
+    const sp=people.filter(p=>p.stage===stage);
+    if(!sp.length)return'';
+    const colTots={today:0,d1:0,d2:0,after:0,none:0};
+    sp.forEach(p=>{const nd=p.nextDate;if(!nd||nd<tod)colTots.none++;else if(nd===tod)colTots.today++;else if(nd===d1)colTots.d1++;else if(nd===d2)colTots.d2++;else colTots.after++;});
+    const thCols=DATE_COLS.map(c=>`<th style="${c.isToday?'background:#fef9c3;color:#92400e':'background:var(--s2);color:var(--t2)'}">
+      <span style="display:block;font-weight:700">${c.label}</span>
+      ${c.date?`<span style="font-size:9px;opacity:.7">${fmtDate(c.date)}(${getDow(c.date)})</span>`:''}
+    </th>`).join('');
+    const regionRows=regions.map(r=>{
+      const rp=sp.filter(p=>p.region===r);
+      if(!rp.length)return'';
+      const buckets={today:[],d1:[],d2:[],after:[],none:[]};
+      rp.forEach(p=>{const nd=p.nextDate;if(!nd||nd<tod)buckets.none.push(p);else if(nd===tod)buckets.today.push(p);else if(nd===d1)buckets.d1.push(p);else if(nd===d2)buckets.d2.push(p);else buckets.after.push(p);});
+      const cells=DATE_COLS.map(c=>{
+        const list=buckets[c.key]||[];
+        if(!list.length)return`<td><span class="empty-dash">—</span></td>`;
+        const chips=list.map(p=>`<span class="chip chip-${p.purpose}">${(p.people||'').split('-')[0]||p.people}</span>`).join('');
+        return`<td><div class="chip-wrap">${chips}</div></td>`;
+      }).join('');
+      return`<tr><td class="region-td">${r}<div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rp.length}명</div></td>${cells}</tr>`;
+    }).filter(Boolean);
+    if(!regionRows.length)return'';
+    const totCells=DATE_COLS.map(c=>`<td>${colTots[c.key]||0}</td>`).join('');
+    return`<div class="meet-section">
+      <div class="stage-meet-hdr" style="background:${STAGE_COLORS[stage]}" onclick="toggleStage(this)">
+        <span class="stage-meet-title">${stage} · ${STAGE_LABELS[stage]}</span>
+        <span class="stage-meet-cnt">${sp.length}명</span>
+        <span class="stage-meet-tog">▲</span>
+      </div>
+      <div class="table-wrap" style="border-radius:0 0 10px 10px;border-top:none">
+        <table class="meet-table">
+          <thead><tr><th style="background:#bde0f5;color:var(--t1)">지역</th>${thCols}</tr></thead>
+          <tbody>
+            ${regionRows.join('')}
+            <tr class="total-row"><td class="region-td">합계</td>${totCells}</tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+  wrap.innerHTML=html||'<div style="padding:40px;text-align:center;color:var(--t3)">만남 데이터가 없습니다</div>';
 }
 
-/* ═══ TOAST ═══ */
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2800);
+function toggleStage(hdr){
+  const body=hdr.nextElementSibling;
+  const tog=hdr.querySelector('.stage-meet-tog');
+  if(body.style.display==='none'){body.style.display='';tog.textContent='▲';}
+  else{body.style.display='none';tog.textContent='▼';}
 }
 
-/* ═══ INIT ═══ */
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 loadData();
 </script>
 </body>
