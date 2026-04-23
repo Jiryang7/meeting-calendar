@@ -230,6 +230,30 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       </div>
     </div>
 
+    <!-- 보유데이터 지역 순서 -->
+    <div class="sc">
+      <div class="sc-hdr">
+        <div>
+          <div class="sc-title">📊 보유데이터 지역 순서</div>
+          <div class="sc-sub">▲▼로 순서 조정. 저장 후 Live Data 표에 반영됩니다.</div>
+        </div>
+        <button class="btn btn-sm btn-acc" onclick="saveRegionOrder()">저장</button>
+      </div>
+      <div class="sc-body" style="padding:0">
+        <table style="width:100%;border-collapse:collapse">
+          <tbody id="regionOrderBody">
+            <tr><td style="padding:20px;text-align:center;color:var(--t3)">불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:10px 16px;border-top:1px solid var(--bd)">
+        <div class="input-row">
+          <input id="newRegionOrder" type="text" placeholder="새 지역 추가 (예: 화정)">
+          <button class="btn" onclick="addRegionOrder()">추가</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 데이터 관리 -->
     <div class="sc">
       <div class="sc-hdr"><div class="sc-title">⚠️ 데이터 관리</div></div>
@@ -288,7 +312,7 @@ async function sha256(str){
 
 /* ═══ LOAD ALL ═══ */
 async function loadAll(){
-  await Promise.all([loadAppData(),loadUsers()]);
+  await Promise.all([loadAppData(),loadUsers(),loadRegionOrder()]);
 }
 
 async function loadAppData(){
@@ -479,6 +503,89 @@ async function savePurposeMap(){
   const inputs=document.querySelectorAll('#purposeBody input[data-raw]');
   inputs.forEach(inp=>{const raw=inp.dataset.raw,val=inp.value.trim();if(raw&&val)appData.purposeMap[raw]=val;});
   await saveAppData();renderPurposes();showToast('목적 매핑 저장됨');
+}
+
+/* ═══ REGION ORDER (보유데이터용) ═══ */
+const LD_ID='00000000-0000-0000-0000-000000000002';
+let ldData={people:[],goals:{},regionList:[],regionOrder:[]};
+
+async function loadRegionOrder(){
+  try{
+    const resp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}&select=data`,{headers:HDR});
+    const rows=await resp.json();
+    if(rows&&rows[0]&&rows[0].data){
+      ldData=rows[0].data;
+      ldData.regionOrder=ldData.regionOrder||[];
+    }
+    // 실제 사람 데이터에서 지역 추출해서 보완
+    const allRegions=[...new Set([...(ldData.regionOrder||[]),...(ldData.people||[]).map(p=>p.region).filter(Boolean)])];
+    // regionOrder에 없는 것 추가
+    allRegions.forEach(r=>{if(!ldData.regionOrder.includes(r))ldData.regionOrder.push(r);});
+    renderRegionOrder();
+  }catch(e){showToast('지역 순서 로드 오류');}
+}
+
+function renderRegionOrder(){
+  const list=ldData.regionOrder||[];
+  const tbody=document.getElementById('regionOrderBody');
+  if(!list.length){tbody.innerHTML='<tr><td style="padding:16px;text-align:center;color:var(--t3)">지역이 없습니다</td></tr>';return;}
+  tbody.innerHTML=list.map((r,i)=>`
+    <tr style="border-bottom:1px solid var(--bd)">
+      <td style="padding:9px 14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <button onclick="moveRegionOrder(${i},-1)" ${i===0?'disabled':''} style="background:none;border:1px solid var(--bd);border-radius:4px;width:24px;height:20px;cursor:pointer;font-size:10px;color:var(--t2);${i===0?'opacity:.3':''}">▲</button>
+            <button onclick="moveRegionOrder(${i},1)" ${i===list.length-1?'disabled':''} style="background:none;border:1px solid var(--bd);border-radius:4px;width:24px;height:20px;cursor:pointer;font-size:10px;color:var(--t2);${i===list.length-1?'opacity:.3':''}">▼</button>
+          </div>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);width:20px;text-align:center">${i+1}</span>
+          <span style="font-size:13px;font-weight:700">${r}</span>
+        </div>
+      </td>
+      <td style="padding:9px 14px;text-align:right">
+        <button onclick="removeRegionOrder(${i})" style="background:none;border:1px solid var(--dp-bd);color:var(--dp);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer">삭제</button>
+      </td>
+    </tr>`).join('');
+}
+
+function moveRegionOrder(idx,dir){
+  const list=ldData.regionOrder||[];
+  const t=idx+dir;
+  if(t<0||t>=list.length)return;
+  [list[idx],list[t]]=[list[t],list[idx]];
+  renderRegionOrder();
+}
+
+function addRegionOrder(){
+  const v=document.getElementById('newRegionOrder').value.trim();
+  if(!v){showToast('지역 이름을 입력해주세요');return;}
+  if(!ldData.regionOrder)ldData.regionOrder=[];
+  if(!ldData.regionOrder.includes(v))ldData.regionOrder.push(v);
+  document.getElementById('newRegionOrder').value='';
+  renderRegionOrder();showToast(`${v} 추가됨`);
+}
+
+function removeRegionOrder(idx){
+  ldData.regionOrder.splice(idx,1);
+  renderRegionOrder();
+}
+
+async function saveRegionOrder(){
+  try{
+    const chk=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}&select=id`,{headers:HDR});
+    const rows=await chk.json();
+    if(!rows||!rows.length){
+      await fetch(`${SB_URL}/rest/v1/meetings`,{
+        method:'POST',headers:{...HDR,'Prefer':'return=minimal'},
+        body:JSON.stringify({id:LD_ID,data:ldData})
+      });
+    } else {
+      await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}`,{
+        method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},
+        body:JSON.stringify({data:ldData})
+      });
+    }
+    showToast('지역 순서 저장됨');
+  }catch(e){showToast('저장 오류: '+e.message);}
 }
 
 /* ═══ CLEAR ALL ═══ */
