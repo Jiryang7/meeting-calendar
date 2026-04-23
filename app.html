@@ -579,11 +579,6 @@ async function load(){
     if(rows&&rows[0]&&rows[0].data){
       const raw=rows[0].data;
       let saved=raw;
-      // 암호화된 데이터면 복호화
-      if(raw.encrypted){
-        const plain=await decrypt(raw.encrypted,encKey);
-        saved=JSON.parse(plain);
-      }
       db=saved.db||{meetings:[]};
       purposeMap=saved.purposeMap||{};
       stageOrder=saved.stageOrder||[];
@@ -602,14 +597,7 @@ async function save(){
   const encKey=getEncKey();
   try{
     let dataToStore;
-    if(encKey){
-      // AES-256 암호화 후 저장 (만남 데이터)
-      const cipher=await encrypt(JSON.stringify(payload),encKey);
-      // regionList/cohortList는 평문으로 최상위에도 저장 (새로고침 시 복구용)
-      dataToStore={encrypted:cipher,regionList,cohortList,stageOrder};
-    } else {
-      dataToStore=payload;
-    }
+    dataToStore=payload;
     await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${SB_ID}`,{
       method:'PATCH',
       headers:{...SB_HDR,'Prefer':'return=minimal'},
