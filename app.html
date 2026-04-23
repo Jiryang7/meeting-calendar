@@ -691,7 +691,7 @@ function parseKorDate(raw){
   if(raw==='내일'){const d=new Date(today);d.setDate(d.getDate()+1);return d.toISOString().slice(0,10);}
   if(raw==='모레'){const d=new Date(today);d.setDate(d.getDate()+2);return d.toISOString().slice(0,10);}
   // M.D / M/D / M월D일
-  const m=raw.match(/^(\d{1,2})[./월](\d{1,2})/);
+  const m=raw.match(/^(\d{1,2})[./월\-](\d{1,2})/);
   if(m)return `${y}-${String(+m[1]).padStart(2,'0')}-${String(+m[2]).padStart(2,'0')}`;
   if(/^\d{4}-\d{2}-\d{2}$/.test(raw))return raw;
   return null;
