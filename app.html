@@ -250,6 +250,9 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
 .err-box{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;font-size:12px;color:#b91c1c;display:none;line-height:1.6}
 .data-bar{display:flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid var(--bd)}
 .data-info{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace}
+.date-filter-btn{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:var(--white);color:var(--t2);transition:all .13s;font-family:'GangwonEduTt',sans-serif}
+.date-filter-btn.active{background:var(--acc);color:#1a1400;border-color:var(--acc)}
+.date-filter-btn:hover:not(.active){background:var(--s2)}
 .spin{width:13px;height:13px;border:2px solid rgba(26,20,0,.2);border-top-color:#1a1400;border-radius:50%;animation:sp .65s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
 
@@ -366,7 +369,12 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
   <div class="app-main">
     <div class="rtabs" id="rtabs"></div>
     <div class="content">
-      <div class="sumbar" id="sumbar"></div>
+      <div style="display:flex;gap:6px;padding:10px 16px 0" id="dateFilterBar">
+      <button class="date-filter-btn active" onclick="setDateFilter('today',this)">오늘</button>
+      <button class="date-filter-btn" onclick="setDateFilter('future',this)">오늘 이후</button>
+      <button class="date-filter-btn" onclick="setDateFilter('all',this)">전체</button>
+    </div>
+    <div class="sumbar" id="sumbar"></div>
 
       <div id="listView"><div class="empty-state"><div class="empty-icon">📋</div>
         <p>왼쪽에서 개강을 선택하고 "+ 추가"로 시작하세요</p>
@@ -509,6 +517,7 @@ let activeFilter=null;
 let adminAuth=false;
 let curCohort='전체';
 let curTerm='전체';
+let curDateFilter='today'; // 'today'=오늘만, 'future'=오늘이후, 'all'=전체
 let curAdminView='settings';
 let regionList=[]; // 지역 목록 (관리자 수정 가능)
 let cohortList=[]; // 개강 목록
@@ -877,6 +886,8 @@ function setCohort(cohort){
 }
 function setView(v){
   curView=v;
+  const dfBar=document.getElementById('dateFilterBar');
+  if(dfBar)dfBar.style.display=(v==='list'?'flex':'none');
   ['list','month','week','settings','stats'].forEach(n=>{
     document.getElementById('vt-'+n)&&document.getElementById('vt-'+n).classList.toggle('active',n===v);
     const m={'list':'listView','month':'monthView','week':'weekView','settings':'settingsView','stats':'statsView'};
@@ -920,6 +931,12 @@ function filtered(){
   if(curTerm!=='전체') list=list.filter(m=>m.term===curTerm);
   if(curCohort!=='전체') list=list.filter(m=>m.cohort===curCohort);
   if(curRegion!=='전체') list=list.filter(m=>m.region===curRegion);
+  // 날짜 필터 (목록 뷰에서만)
+  if(curView==='list'){
+    const td=new Date().toISOString().slice(0,10);
+    if(curDateFilter==='today') list=list.filter(m=>m.date===td);
+    else if(curDateFilter==='future') list=list.filter(m=>m.date>=td);
+  }
   return [...list];
 }
 
@@ -1078,7 +1095,12 @@ function extractStageCode(stage){
 ════════════════════ */
 function renderList(list){
   const el=document.getElementById('listView');
-  if(!list.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><p>데이터가 없습니다<br>"+ 추가"로 시작하세요</p></div>`;return;}
+  if(!list.length){
+    const msg=curDateFilter==='today'?'오늘 예정된 만남이 없어요':'데이터가 없습니다';
+    const icon=curDateFilter==='today'?'☀️':'📋';
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`;
+    return;
+  }
 
   // group: date → stage → purpose → meetings
   const byDate={};
@@ -1093,26 +1115,7 @@ function renderList(list){
 
   const today=new Date().toISOString().slice(0,10);
   let h='';
-  // 오늘 이후만 표시 (과거 숨기기)
-  const sortedDates=Object.keys(byDate).sort().filter(d=>d>=today);
-  const pastDates=Object.keys(byDate).sort().filter(d=>d<today);
-  // 과거 데이터가 있으면 접힌 상태로 표시
-  if(pastDates.length){
-    const pastCount=pastDates.flatMap(d=>Object.values(byDate[d]).flatMap(g=>g.items)).length;
-    h+=`<div style="text-align:center;padding:8px;margin-bottom:8px">
-      <button onclick="togglePast(this)" style="font-size:11px;color:var(--t3);background:none;border:1px solid var(--bd);border-radius:20px;padding:4px 14px;cursor:pointer">
-        📁 이전 만남 ${pastCount}건 보기
-      </button>
-    </div>
-    <div id="pastMeetings" style="display:none">`;
-    pastDates.forEach(date=>{
-      const dt=new Date(date+'T00:00:00');
-      const mm=+date.slice(5,7),dd=+date.slice(8,10);
-      const all=Object.values(byDate[date]).flatMap(g=>g.items);
-      h+=renderDateGroup(date,mm,dd,dt,all,byDate[date],today);
-    });
-    h+=`</div>`;
-  }
+  const sortedDates=Object.keys(byDate).sort();
   sortedDates.forEach(date=>{
     const dt=new Date(date+'T00:00:00');
     const mm=+date.slice(5,7),dd=+date.slice(8,10);
