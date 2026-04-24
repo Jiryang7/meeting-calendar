@@ -239,7 +239,7 @@ async function loadData(){
       const d=d1[0].data;
       ldData.people=d.people||[];
       // goals 구조 마이그레이션: flat → term별
-      const rawGoals=d.goals||{};
+      const rawGoals=d.goals||{'전체':{},'4월':{},'5월':{}};
       if(rawGoals['전체']||rawGoals['4월']||rawGoals['5월']){
         ldData.goals=rawGoals; // 이미 새 구조
       } else {
@@ -260,11 +260,13 @@ async function loadData(){
 
 async function saveData(){
   try{
-    await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}`,{
+    const resp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}`,{
       method:'PATCH',headers:{...SB_HDR,'Prefer':'return=minimal'},
       body:JSON.stringify({data:ldData})
     });
-  }catch(e){showToast('저장 오류');}
+    if(!resp.ok){const t=await resp.text();showToast('저장 오류: '+resp.status);console.error(t);}
+    else{showToast('✓ 저장됨');}
+  }catch(e){showToast('저장 오류: '+e.message);}
 }
 
 function render(){renderStageTable();renderMeetTables();}
