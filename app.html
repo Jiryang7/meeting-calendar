@@ -345,7 +345,7 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
   <div class="vtabs">
     <button class="vtab active" onclick="setView('list')" id="vt-list">목록</button>
     <button class="vtab" onclick="setView('month')" id="vt-month">월간</button>
-    <button class="vtab" onclick="setView('week')" id="vt-week">주간</button>
+    <button class="vtab" onclick="setView('week')" id="vt-week" style="display:none">주간</button>
     <button class="vtab" onclick="setView('stats')" id="vt-stats">📊 분석</button>
     <!-- settings moved to sidebar -->
   </div>
@@ -354,6 +354,7 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--t1);mi
     <a href="livedata.html" style="font-size:12px;color:#0284c7;text-decoration:none;padding:5px 10px;border-radius:6px;background:#e0f2fe;border:1px solid #7dd3fc;font-weight:600;transition:all .13s" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'">📊 Live Data</a>
     <a href="admin.html" style="font-size:12px;color:var(--t3);text-decoration:none;padding:5px 8px;border-radius:6px;transition:background .13s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='none'">관리자</a>
     <button class="btn btn-sm btn-ghost" onclick="doLogout()" style="font-size:11px">로그아웃</button>
+    <button class="btn btn-sm btn-ghost" onclick="loadData()" style="font-size:11px">↺</button>
     <button class="btn btn-acc" onclick="openModal()">+ 추가</button>
   </div>
 </div>
@@ -484,6 +485,12 @@ const R_ICON={'단계향상':'🎉','단계유지':'✔️','만남중':'🎵','
 const R_CLS ={'단계향상':'r-up','단계유지':'r-ke','만남중':'r-on','만남후탈락':'r-da'};
 const R_CLR ={'단계향상':'#15803d','단계유지':'#1d4ed8','만남중':'#7c3aed','만남후탈락':'#6b7280'};
 const R_RANK={'만남후탈락':1,'만남중':2,'단계유지':3,'단계향상':4};
+const CF_EMOJI={
+  '미확티':'❓','전티완료':'📋','확티':'✅','만남전탈락':'🚫','만남연기':'⏰'
+};
+const RESULT_EMOJI={
+  '단계향상':'🎉','만남유지':'💚','만남후탈락':'❌','탈락전':'⚠️','단계유지':'🔄'
+};
 const CF_RANK={null:0,'미확티':1,'만남연기':1,'만남전탈락':1,'전티완료':2,'확티':3};
 const CF_CLS={'미확티':'cf-un-badge','전티완료':'cf-pt-badge','확티':'cf-ok-badge','만남전탈락':'cf-un-badge','만남연기':'cf-un-badge'};
 const CF_ICON={'미확티':'🔴','전티완료':'🟡','확티':'🟢','만남전탈락':'❌','만남연기':'🔺'};
@@ -947,6 +954,7 @@ function renderMain(){
 
 function applyFilter(list){
   if(!activeFilter)return list;
+  if(activeFilter.type==='stage')return list.filter(m=>extractStageCode(m.stage||'')===activeFilter.value);
   if(activeFilter.type==='cf')return list.filter(m=>isPre(m)&&(m.confirmStatus||'미확티')===activeFilter.value);
   if(activeFilter.type==='result')return list.filter(m=>!isPre(m)&&m.resultStatus===activeFilter.value);
   if(activeFilter.type==='fb')return list.filter(m=>(m.feedback||'')===(activeFilter.value||''));
@@ -981,61 +989,88 @@ function toggleFilter(type,value){
 function renderSumbar(list){
   const sb=document.getElementById('sumbar');
   if(!list.length){sb.style.display='none';activeFilter=null;return;}
-  sb.style.display='flex';sb.style.flexDirection='column';sb.style.gap='8px';
+  sb.style.display='block';
+
+  const STAGES=['1.CH','2.H','4.D1','5.D2','6.B','7.CT'];
+  const STAGE_CODES=['CH','H','D1','D2','B','CT'];
+  const STAGE_COLORS={CH:'#0ea5e9',H:'#8b5cf6',D1:'#f59e0b',D2:'#f97316',B:'#10b981',CT:'#6366f1'};
+
   const pre=list.filter(isPre),done=list.filter(m=>!isPre(m));
+  const total=list.length;
+
+  // 단계별 카운트
+  const stageCnt={};
+  STAGE_CODES.forEach(s=>stageCnt[s]={pre:0,done:0});
+  pre.forEach(m=>{const s=extractStageCode(m.stage||'');if(stageCnt[s])stageCnt[s].pre++;});
+  done.forEach(m=>{const s=extractStageCode(m.stage||'');if(stageCnt[s])stageCnt[s].done++;});
+
+  // 확티 현황
   const cfC={'미확티':0,'전티완료':0,'확티':0};
   pre.forEach(m=>{if(m.confirmStatus&&cfC[m.confirmStatus]!==undefined)cfC[m.confirmStatus]++;});
   const rC={};ALL_R.forEach(s=>rC[s]=done.filter(m=>m.resultStatus===s).length);
-  const cfColors={'미확티':'var(--cf-un)','전티완료':'var(--cf-pt)','확티':'var(--cf-ok)'};
-  const fbC={'done':list.filter(m=>m.feedback==='done').length,'plan':list.filter(m=>m.feedback==='plan').length,'':list.filter(m=>!m.feedback).length};
 
   const isActive=(type,val)=>activeFilter&&activeFilter.type===type&&activeFilter.value===val;
-  const chipStyle=(type,val,dotColor)=>{
-    const act=isActive(type,val);
-    return `cursor:pointer;transition:all .13s;${act?`background:${dotColor};border-color:${dotColor};outline:2px solid ${dotColor};outline-offset:1px;`:''}`;
-  };
 
-  const filtered_cnt=applyFilter(list).length;
-  const clearBtn=activeFilter?`<div class="s-total" style="background:var(--acc);color:#1a1400;cursor:pointer;margin-left:auto" onclick="activeFilter=null;renderMain()">✕ ${filtered_cnt}건</div>`:`<div class="s-total" style="margin-left:auto">총 ${list.length}건</div>`;
+  // 단계 요약 표
+  let stageRows=STAGE_CODES.map(s=>{
+    const c=stageCnt[s];
+    const total_s=c.pre+c.done;
+    if(!total_s)return'';
+    const act=isActive('stage',s);
+    return`<tr onclick="toggleFilter('stage','${s}')" style="cursor:pointer;${act?'background:var(--acc-lt);':''}transition:background .13s">
+      <td style="padding:6px 10px;font-weight:700;color:${STAGE_COLORS[s]};white-space:nowrap">${s}</td>
+      <td style="padding:6px 10px;text-align:center;font-weight:700">${total_s}</td>
+      <td style="padding:6px 10px;text-align:center;color:var(--cf-ok)">${c.pre}</td>
+      <td style="padding:6px 10px;text-align:center;color:var(--t3)">${c.done}</td>
+    </tr>`;
+  }).join('');
 
-  // 행 1: 피드백
-  let row1=`<div class="sumbar-row"><span class="sumbar-label">피드백</span>`;
-  [['done','✅ 완료','#15803d'],['plan','📝 예정','#b45309'],['','⬜ 미정','#9ca3af']].forEach(([val,label,color])=>{
-    // 항상 표시 (0건도)
-    const act=isActive('fb',val);
-    row1+=`<div class="s-chip" style="${chipStyle('fb',val,color)}" onclick="toggleFilter('fb','${val}')">
-      <div class="sdot" style="background:${act?'#fff':color}"></div>
-      <span class="sl" style="${act?'color:#fff':''}">${label}</span>
-      <span class="sv" style="${act?'color:#fff':''}">${fbC[val]}</span>
-    </div>`;
-  });
-  row1+=clearBtn+'</div>';
+  // 확티/결과 행
+  const cfRow=['미확티','전티완료','확티'].map(s=>{
+    const cnt=cfC[s];if(!cnt)return'';
+    const act=isActive('cf',s);
+    const cfColors={'미확티':'var(--cf-un)','전티완료':'var(--cf-pt)','확티':'var(--cf-ok)'};
+    return`<span onclick="toggleFilter('cf','${s}')" style="cursor:pointer;font-size:11px;padding:3px 8px;border-radius:10px;border:1px solid;background:${act?cfColors[s]:'transparent'};color:${act?'#fff':cfColors[s]};border-color:${cfColors[s]};display:inline-flex;align-items:center;gap:3px;transition:all .13s">
+      ${CF_ICON[s]} ${s} <b>${cnt}</b>
+    </span>`;
+  }).join('');
 
-  // 행 2: 예정(확인티켓)
-  let row2=`<div class="sumbar-row"><span class="sumbar-label">예정</span>`;
-  ['미확티','전티완료','확티'].forEach(s=>{
-    const cnt=cfC[s];const act=isActive('cf',s);const dim=cnt===0;
-    row2+=`<div class="s-chip" style="${dim?'opacity:.35;cursor:default':chipStyle('cf',s,cfColors[s])}" ${!dim?`onclick="toggleFilter('cf','${s}')"`:''}">
-      <div class="sdot" style="background:${act?'#fff':cfColors[s]}"></div>
-      <span class="sl" style="${act?'color:#fff':'color:'+cfColors[s]}">${CF_ICON[s]} ${s}</span>
-      <span class="sv" style="${act?'color:#fff':''}">${cnt}</span>
-    </div>`;
-  });
-  row2+='</div>';
-
-  // 행 3: 결과
-  let row3=`<div class="sumbar-row"><span class="sumbar-label">결과</span>`;
-  ALL_R.filter(s=>rC[s]>0).forEach(s=>{
+  const resultRow=ALL_R.filter(s=>rC[s]>0).map(s=>{
     const act=isActive('result',s);
-    row3+=`<div class="s-chip" style="${chipStyle('result',s,R_CLR[s])}" onclick="toggleFilter('result','${s}')">
-      <div class="sdot" style="background:${act?'#fff':R_CLR[s]}"></div>
-      <span class="sl" style="${act?'color:#fff':''}">${R_ICON[s]} ${s}</span>
-      <span class="sv" style="${act?'color:#fff':''}">${rC[s]}</span>
-    </div>`;
-  });
-  row3+='</div>';
+    return`<span onclick="toggleFilter('result','${s}')" style="cursor:pointer;font-size:11px;padding:3px 8px;border-radius:10px;border:1px solid;background:${act?R_CLR[s]:'transparent'};color:${act?'#fff':R_CLR[s]};border-color:${R_CLR[s]};display:inline-flex;align-items:center;gap:3px;transition:all .13s">
+      ${R_ICON[s]} ${s} <b>${rC[s]}</b>
+    </span>`;
+  }).join('');
 
-  sb.innerHTML=row1+row2+row3;
+  const clearBtn=activeFilter?`<span style="cursor:pointer;font-size:11px;padding:3px 8px;border-radius:10px;background:var(--acc);color:#1a1400;font-weight:700" onclick="activeFilter=null;renderMain()">✕ 필터 해제</span>`:'';
+
+  sb.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:12px;font-weight:700;color:var(--t2)">총 ${total}건</span>
+      ${clearBtn}
+    </div>
+    <div style="overflow:auto;border-radius:8px;border:1px solid var(--bd)">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:'DM Mono',monospace">
+        <thead>
+          <tr style="background:var(--s2)">
+            <th style="padding:5px 10px;text-align:left;font-size:10px;color:var(--t3);font-weight:700">단계</th>
+            <th style="padding:5px 10px;text-align:center;font-size:10px;color:var(--t3);font-weight:700">합계</th>
+            <th style="padding:5px 10px;text-align:center;font-size:10px;color:var(--cf-ok);font-weight:700">예정</th>
+            <th style="padding:5px 10px;text-align:center;font-size:10px;color:var(--t3);font-weight:700">완료</th>
+          </tr>
+        </thead>
+        <tbody>${stageRows||'<tr><td colspan="4" style="padding:10px;text-align:center;color:var(--t3)">데이터 없음</td></tr>'}</tbody>
+      </table>
+    </div>
+    ${cfRow||resultRow?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${cfRow}${resultRow}</div>`:''}
+  `;
+}
+
+function extractStageCode(stage){
+  if(!stage)return'기타';
+  const s=stage.toString().toUpperCase();
+  for(const c of ['CH','H','D1','D2','B','CT']){if(s.includes(c))return c;}
+  return stage;
 }
 
 /* ════════════════════
@@ -1058,7 +1093,27 @@ function renderList(list){
 
   const today=new Date().toISOString().slice(0,10);
   let h='';
-  Object.keys(byDate).sort().forEach(date=>{
+  // 오늘 이후만 표시 (과거 숨기기)
+  const sortedDates=Object.keys(byDate).sort().filter(d=>d>=today);
+  const pastDates=Object.keys(byDate).sort().filter(d=>d<today);
+  // 과거 데이터가 있으면 접힌 상태로 표시
+  if(pastDates.length){
+    const pastCount=pastDates.flatMap(d=>Object.values(byDate[d]).flatMap(g=>g.items)).length;
+    h+=`<div style="text-align:center;padding:8px;margin-bottom:8px">
+      <button onclick="togglePast(this)" style="font-size:11px;color:var(--t3);background:none;border:1px solid var(--bd);border-radius:20px;padding:4px 14px;cursor:pointer">
+        📁 이전 만남 ${pastCount}건 보기
+      </button>
+    </div>
+    <div id="pastMeetings" style="display:none">`;
+    pastDates.forEach(date=>{
+      const dt=new Date(date+'T00:00:00');
+      const mm=+date.slice(5,7),dd=+date.slice(8,10);
+      const all=Object.values(byDate[date]).flatMap(g=>g.items);
+      h+=renderDateGroup(date,mm,dd,dt,all,byDate[date],today);
+    });
+    h+=`</div>`;
+  }
+  sortedDates.forEach(date=>{
     const dt=new Date(date+'T00:00:00');
     const mm=+date.slice(5,7),dd=+date.slice(8,10);
     const all=Object.values(byDate[date]).flatMap(g=>g.items);
@@ -1153,7 +1208,11 @@ function cardHTML(m,showReg=false){
         </div>
       </div>
       ${m.note?`<div class="mc-sub" style="color:var(--t3)">${m.note}</div>`:''}
-      ${m.nextMeeting?`<div class="mc-next">${m.nextMeeting}</div>`:''}
+      ${m.nextMeeting?`<div class="mc-next">→ ${m.nextMeeting}</div>`:''}
+      <div class="mc-badges">
+        ${m.resultStatus?(RESULT_EMOJI[m.resultStatus]||'')+'<span class="mc-badge-txt">'+m.resultStatus+'</span>':
+          (CF_EMOJI[m.confirmStatus||'미확티']||'')+'<span class="mc-badge-txt">'+(m.confirmStatus||'미확티')+'</span>'}
+      </div>
       ${histLine}
     </div>
     <select class="fb-select ${fbCls}" onchange="setFeedbackIdx(${db.meetings.indexOf(m)},this.value)" title="피드백 상태">
