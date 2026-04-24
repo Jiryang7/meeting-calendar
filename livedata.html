@@ -47,10 +47,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .table-wrap{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:auto;box-shadow:0 2px 12px rgba(14,165,233,.08)}
 
 /* 표1 */
-.stage-table{width:100%;border-collapse:collapse;font-size:12px}
-.stage-table th{padding:8px 10px;font-size:11px;font-weight:700;text-align:center;border:1px solid var(--bd);white-space:nowrap}
-.stage-table td{padding:8px 10px;border:1px solid var(--bd);text-align:center;font-family:'DM Mono',monospace;font-weight:700;font-size:13px;vertical-align:middle}
-.stage-table td.region-td{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:13px;background:#f0f9ff;text-align:center}
+.stage-table{width:100%;border-collapse:collapse;font-size:14px}
+.stage-table th{padding:9px 12px;font-size:12px;font-weight:700;text-align:center;border:1px solid var(--bd);white-space:nowrap}
+.stage-table td{padding:9px 12px;border:1px solid var(--bd);text-align:center;font-family:'DM Mono',monospace;font-weight:700;font-size:15px;vertical-align:middle}
+.stage-table td.region-td{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:14px;background:#f0f9ff;text-align:center}
 .stage-table tr.total-row td{background:var(--acc-lt);font-weight:700;color:var(--acc-dk)}
 .stage-table tr.total-row td.region-td{background:var(--acc);color:#fff}
 .goal-cell{cursor:pointer;border-radius:4px;padding:2px 4px;transition:all .13s;min-width:28px;display:inline-block}
@@ -87,6 +87,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .toast{background:var(--t1);color:#fff;border-radius:20px;padding:9px 20px;font-size:12px;font-family:'DM Mono',monospace;white-space:nowrap;opacity:0;transition:opacity .2s}
 .toast.show{opacity:1}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="stripe"></div>
@@ -98,6 +99,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   </div>
   <div class="hdr-r">
     <button class="btn btn-sm" onclick="loadData()"><span id="syncIcon">↺</span> 새로고침</button>
+    <a href="admin.html" class="btn btn-sm" style="text-decoration:none">관리자</a>
     <button class="btn btn-sm" onclick="doLogout()">로그아웃</button>
   </div>
 </div>
@@ -124,7 +126,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <div class="section-title">📈 단계별 보유현황</div>
       <div class="section-badge" id="totalBadge">총 0명</div>
       <span style="font-size:11px;color:var(--t3)">목표 클릭해서 수정 가능</span>
+      <button class="btn btn-sm" onclick="downloadSection('stageSection','단계별보유현황')" style="margin-left:auto;font-size:11px">⬇ 저장</button>
     </div>
+    <div id="stageSection">
     <div class="table-wrap">
       <table class="stage-table">
         <thead>
@@ -284,7 +288,16 @@ function renderStageTable(){
   function rateCell(cnt,goal){
     if(!goal)return'<span style="color:var(--t3)">—</span>';
     const r=Math.round(cnt/goal*100);
-    return`<span class="${r>=100?'rate-ok':r>=70?'rate-warn':'rate-dp'}">${r}%</span>`;
+    // 그라데이션 색상: 0%=빨강, 50%=흰색, 70%+=초록
+    function rateColor(r){
+      if(r>=100)return{bg:'#dcfce7',color:'#15803d',border:'#86efac'};
+      if(r>=70)return{bg:'#f0fdf4',color:'#16a34a',border:'#bbf7d0'};
+      if(r>=50)return{bg:'#fff',color:'#6b7280',border:'#e5e7eb'};
+      if(r>=30)return{bg:'#fff7ed',color:'#ea580c',border:'#fed7aa'};
+      return{bg:'#fef2f2',color:'#dc2626',border:'#fca5a5'};
+    }
+    const c=rateColor(r);
+    return\`<span style="background:\${c.bg};color:\${c.color};border:1px solid \${c.border};border-radius:6px;padding:3px 8px;font-size:13px;font-weight:700;display:inline-block;min-width:48px;text-align:center">\${r}%</span>\`;
   }
 
   // 목표 합산
@@ -422,6 +435,25 @@ function toggleStage(hdr){
   const tog=hdr.querySelector('.stage-meet-tog');
   if(body.style.display==='none'){body.style.display='';tog.textContent='▲';}
   else{body.style.display='none';tog.textContent='▼';}
+}
+
+function downloadSection(id, filename){
+  const el=document.getElementById(id)||document.querySelector('.table-wrap');
+  const target=id==='stageSection'?document.querySelector('#stageSection .table-wrap'):el;
+  if(!target){showToast('캡처할 영역을 찾을 수 없어요');return;}
+  showToast('이미지 저장 중...');
+  html2canvas(target,{
+    scale:3,
+    backgroundColor:'#ffffff',
+    useCORS:true,
+    logging:false
+  }).then(canvas=>{
+    const link=document.createElement('a');
+    link.download=filename+'_'+new Date().toISOString().slice(0,10)+'.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    showToast('✓ 저장됐어요!');
+  }).catch(e=>showToast('오류: '+e.message));
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
