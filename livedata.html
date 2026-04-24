@@ -181,6 +181,7 @@ const STAGE_LABELS={CH:'찾기',H:'합자',D1:'육따',D2:'영따',B:'복',CT:'�
 const STAGE_COLORS={CH:'var(--stage-ch)',H:'var(--stage-h)',D1:'var(--stage-d1)',D2:'var(--stage-d2)',B:'var(--stage-b)',CT:'var(--stage-ct)'};
 
 let ldData={people:[],goals:{},regionList:[],regionOrder:[]};
+// goals 구조: {전체:{지역:{SE,H,D1,D2}}, 4월:{...}, 5월:{...}}
 let filterTerm='전체'; // 전체/4월/5월
 let filterType='전체'; // 전체/청년/협력교회
 
@@ -213,8 +214,9 @@ function getFilteredPeople(){
   return ldData.people.filter(p=>{
     // 개강 필터: cohort 필드에 "4월" 또는 "5월" 포함 여부
     if(filterTerm!=='전체'){
-  if((p.term||'')!==filterTerm)return false;
-}
+      const c=(p.cohort||'').toString();
+      if(!c.includes(filterTerm))return false;
+    }
     // 구분 필터: cohort 첫 번째 값이 "청년" 또는 "협력교회"
     if(filterType!=='전체'){
       const c=(p.cohort||'').toString();
@@ -233,7 +235,13 @@ async function loadData(){
     if(d1&&d1[0]&&d1[0].data){
       const d=d1[0].data;
       ldData.people=d.people||[];
-      ldData.goals=d.goals||{};
+      // goals 구조 마이그레이션: flat → term별
+      const rawGoals=d.goals||{};
+      if(rawGoals['전체']||rawGoals['4월']||rawGoals['5월']){
+        ldData.goals=rawGoals; // 이미 새 구조
+      } else {
+        ldData.goals={'전체':rawGoals,'4월':{},'5월':{}}; // 기존 flat 구조 마이그레이션
+      }
       ldData.regionList=d.regionList||[];
       ldData.regionOrder=d.regionOrder||[];
     }
@@ -270,7 +278,8 @@ function renderStageTable(){
   regions.forEach(r=>{countMap[r]={total:0};STAGES.forEach(s=>countMap[r][s]=0);});
   people.forEach(p=>{if(!p.region||!countMap[p.region])return;countMap[p.region][p.stage]=(countMap[p.region][p.stage]||0)+1;countMap[p.region].total++;totRow[p.stage]=(totRow[p.stage]||0)+1;totRow.total++;});
   document.getElementById('totalBadge').textContent=`총 ${totRow.total}명`;
-  const goals=ldData.goals||{};
+  const termKey=filterTerm==='전체'?'전체':filterTerm;
+  const goals=(ldData.goals&&ldData.goals[termKey])||{};
   const sc={CH:'#0369a1',H:'#6d28d9',D1:'#92400e',D2:'#c2410c',B:'#065f46',CT:'#3730a3'};
 
   function rateCell(cnt,goal){
@@ -331,8 +340,10 @@ function editGoal(region,stage,el){
   function finish(){
     el.contentEditable='false';el.classList.remove('editing');
     const val=parseInt(el.textContent)||0;
-    if(!ldData.goals[region])ldData.goals[region]={};
-    ldData.goals[region][stage]=val;el.textContent=val||'—';
+    const termKey=filterTerm==='전체'?'전체':filterTerm;
+    if(!ldData.goals[termKey])ldData.goals[termKey]={};
+    if(!ldData.goals[termKey][region])ldData.goals[termKey][region]={};
+    ldData.goals[termKey][region][stage]=val;el.textContent=val||'—';
     saveData();renderStageTable();
   }
   el.onblur=finish;
@@ -373,7 +384,7 @@ function renderMeetTables(){
       const cells=DATE_COLS.map(c=>{
         const list=buckets[c.key]||[];
         if(!list.length)return`<td><span class="empty-dash">—</span></td>`;
-        const chips=list.map(p=>`<span class="chip chip-${p.purpose}">${p.people||''}</span>`).join('');
+        const chips=list.map(p=>`<span class="chip chip-${p.purpose}">${(p.people||'').split('-')[0]}/${p.purpose}</span>`).join('');
         return`<td><div class="chip-wrap">${chips}</div></td>`;
       }).join('');
       return`<tr><td class="region-td">${r}<div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rp.length}명</div></td>${cells}</tr>`;
@@ -384,6 +395,13 @@ function renderMeetTables(){
       <div class="stage-meet-hdr" style="background:${STAGE_COLORS[stage]}" onclick="toggleStage(this)">
         <span class="stage-meet-title">${stage} · ${STAGE_LABELS[stage]}</span>
         <span class="stage-meet-cnt">${sp.length}명</span>
+        <span style="margin-left:8px;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:9px;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;border-radius:6px;padding:1px 5px">상담</span>
+          <span style="font-size:9px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:6px;padding:1px 5px">영따</span>
+          <span style="font-size:9px;background:#fef9c3;color:#854d0e;border:1px solid #fde047;border-radius:6px;padding:1px 5px">육따</span>
+          <span style="font-size:9px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:6px;padding:1px 5px">복음</span>
+          <span style="font-size:9px;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:6px;padding:1px 5px">기타</span>
+        </span>
         <span class="stage-meet-tog">▲</span>
       </div>
       <div class="table-wrap" style="border-radius:0 0 10px 10px;border-top:none">
