@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>목표 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f3ef;--white:#fff;--bd:#dddcd2;--s2:#eae9e4;
+  --t1:#1a1916;--t2:#6b6960;--t3:#aaa99f;
+  --acc:#FAC608;--acc-dk:#c49600;--acc-lt:#fffae8;
+  --ok:#15803d;--ok-bg:#dcfce7;
+}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+.hdr{height:50px;background:var(--white);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;gap:6px;position:sticky;top:0;z-index:100}
+.hdr-logo{font-size:13px;font-weight:700;margin-right:4px}
+.hdr-tab{padding:4px 9px;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--white);color:var(--t2);text-decoration:none;transition:all .13s}
+.hdr-tab:hover{border-color:var(--acc);background:var(--acc-lt)}
+.hdr-tab.active{background:var(--acc);color:#1a1400;border-color:var(--acc);font-weight:700}
+.content{max-width:900px;margin:0 auto;padding:20px}
+.card{background:var(--white);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px}
+.card-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--t3);margin-bottom:4px;letter-spacing:.04em}
+.field select{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:7px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);outline:none}
+.field select:focus{border-color:var(--acc)}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.btn{padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .13s}
+.btn-acc{background:var(--acc);color:#1a1400}
+.btn-sec{background:var(--white);color:var(--t1);border:1px solid var(--bd)}
+.btn-sec:hover{background:var(--s2)}
+
+/* 목표 테이블 */
+.goals-table{width:100%;border-collapse:collapse;font-size:13px}
+.goals-table th{padding:9px 12px;font-size:12px;font-weight:700;text-align:center;border:1px solid var(--bd);background:var(--s2);white-space:nowrap}
+.goals-table th.region-th{background:#bde0f5;color:var(--t1)}
+.goals-table th.goal-th{background:#eef6ff;color:#1e40af}
+.goals-table td{padding:8px 10px;border:1px solid var(--bd);text-align:center;font-size:14px;font-weight:700;font-family:'DM Mono',monospace}
+.goals-table td.region-td{font-family:'Noto Sans KR',sans-serif;font-size:14px;background:#f0f9ff}
+.goals-table tr:hover td{background:#fafaf8}
+.goals-table input{width:100%;border:none;background:transparent;text-align:center;font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--t1);outline:none;padding:2px}
+.goals-table input:focus{background:var(--acc-lt);border-radius:4px}
+
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd);font-weight:700}
+.toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
+.toast{background:var(--t1);color:#fff;border-radius:20px;padding:8px 18px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity .2s}
+.toast.show{opacity:1}
+.spin{width:12px;height:12px;border:2px solid rgba(26,20,0,.2);border-top-color:var(--t1);border-radius:50%;animation:sp .6s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <span class="hdr-logo">🎯 목표 관리</span>
+  <a href="app.html" class="hdr-tab">📅 만캘</a>
+  <a href="livedata.html" class="hdr-tab">📊 보유</a>
+  <a href="report.html" class="hdr-tab">📄 보고</a>
+  <a href="goals.html" class="hdr-tab active">🎯 목표</a>
+</div>
+
+<div class="content">
+
+  <!-- 필터 -->
+  <div class="card">
+    <div class="card-title">🎯 목표 설정</div>
+    <div class="grid3">
+      <div class="field">
+        <label>개강</label>
+        <select id="fTerm" onchange="renderGoalsTable()">
+          <option value="4월">4월개강</option>
+          <option value="5월">5월개강</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>구분</label>
+        <select id="fType" onchange="renderGoalsTable()">
+          <option value="청년">청년</option>
+          <option value="협력교회">협력교회</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>저장 상태</label>
+        <div style="padding:8px 0;font-size:12px;color:var(--t3)" id="saveStatus">-</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-acc" onclick="saveGoals()" id="saveBtn">💾 저장</button>
+      <button class="btn btn-sec" onclick="loadGoals()">↺ 새로고침</button>
+    </div>
+  </div>
+
+  <!-- 목표 테이블 -->
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px">
+      <span style="font-size:13px;font-weight:700">목표 입력표</span>
+      <span style="font-size:11px;color:var(--t3)">셀 클릭해서 바로 수정</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="goals-table" id="goalsTable">
+        <thead>
+          <tr>
+            <th class="region-th">지역</th>
+            <th class="goal-th">센등</th>
+            <th class="goal-th">영따기</th>
+            <th class="goal-th">육따기</th>
+            <th class="goal-th">합자</th>
+          </tr>
+        </thead>
+        <tbody id="goalsBody">
+          <tr><td colspan="5" style="padding:30px;text-align:center;color:var(--t3)">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-wrap"><div class="toast" id="toast"></div></div>
+
+<script>
+const SB_URL='https://tduhoyzgbkwhrvfadsww.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkdWhveXpnYmt3aHJ2ZmFkc3d3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjI3NjMsImV4cCI6MjA5MjQ5ODc2M30.yoAiBzAJCHnp_gtWzO2WooeIlVh8xRnpCmBZETrX-wg';
+const GOALS_ID='00000000-0000-0000-0000-000000000003'; // 목표 전용 행
+const LD_ID='00000000-0000-0000-0000-000000000002';
+const SB_HDR={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+let goalsData={}; // {4월: {청년: {화정: {SE:5,H:10,D1:16,D2:10}}, ...}}
+let regionList=[];
+
+function getSession(){try{return JSON.parse(localStorage.getItem('mtg-user'));}catch{return null;}}
+if(!getSession()){window.location.href='index.html';}
+
+async function loadGoals(){
+  document.getElementById('saveStatus').textContent='불러오는 중...';
+  try{
+    // 목표 데이터
+    const r1=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${GOALS_ID}&select=data`,{headers:SB_HDR});
+    const d1=await r1.json();
+    if(d1&&d1[0]&&d1[0].data){
+      goalsData=d1[0].data||{};
+    }
+    // 지역 목록
+    const r2=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}&select=data`,{headers:SB_HDR});
+    const d2=await r2.json();
+    if(d2&&d2[0]&&d2[0].data){
+      regionList=d2[0].data.regionList||d2[0].data.regionOrder||[];
+    }
+    if(!regionList.length){
+      regionList=['화정','대학','상암','명동','새소망','완성','새신자'];
+    }
+    renderGoalsTable();
+    const t=new Date().toLocaleTimeString('ko-KR');
+    document.getElementById('saveStatus').textContent=`마지막 로드: ${t}`;
+  }catch(e){
+    document.getElementById('saveStatus').textContent='로드 오류';
+    showToast('로드 오류: '+e.message);
+  }
+}
+
+function renderGoalsTable(){
+  const term=document.getElementById('fTerm').value;
+  const type=document.getElementById('fType').value;
+
+  // 현재 선택된 목표 가져오기
+  const currentGoals=(goalsData[term]&&goalsData[term][type])||{};
+
+  const tbody=document.getElementById('goalsBody');
+  tbody.innerHTML=regionList.map(r=>{
+    const g=currentGoals[r]||{};
+    return`<tr>
+      <td class="region-td">${r}</td>
+      <td><input type="number" min="0" value="${g.SE||''}" placeholder="—" onchange="updateGoal('${r}','SE',this.value)"></td>
+      <td><input type="number" min="0" value="${g.D2||''}" placeholder="—" onchange="updateGoal('${r}','D2',this.value)"></td>
+      <td><input type="number" min="0" value="${g.D1||''}" placeholder="—" onchange="updateGoal('${r}','D1',this.value)"></td>
+      <td><input type="number" min="0" value="${g.H||''}" placeholder="—" onchange="updateGoal('${r}','H',this.value)"></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateGoal(region, stage, value){
+  const term=document.getElementById('fTerm').value;
+  const type=document.getElementById('fType').value;
+  if(!goalsData[term])goalsData[term]={};
+  if(!goalsData[term][type])goalsData[term][type]={};
+  if(!goalsData[term][type][region])goalsData[term][type][region]={};
+  const val=parseInt(value)||0;
+  if(val)goalsData[term][type][region][stage]=val;
+  else delete goalsData[term][type][region][stage];
+}
+
+async function saveGoals(){
+  const btn=document.getElementById('saveBtn');
+  btn.innerHTML='<span class="spin"></span> 저장 중...';
+  btn.disabled=true;
+  try{
+    // 행 존재 확인
+    const chk=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${GOALS_ID}&select=id`,{headers:SB_HDR});
+    const rows=await chk.json();
+    if(!rows||!rows.length){
+      await fetch(`${SB_URL}/rest/v1/meetings`,{
+        method:'POST',headers:{...SB_HDR,'Prefer':'return=minimal'},
+        body:JSON.stringify({id:GOALS_ID,data:goalsData})
+      });
+    } else {
+      await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${GOALS_ID}`,{
+        method:'PATCH',headers:{...SB_HDR,'Prefer':'return=minimal'},
+        body:JSON.stringify({data:goalsData})
+      });
+    }
+    const t=new Date().toLocaleTimeString('ko-KR');
+    document.getElementById('saveStatus').textContent=`저장됨: ${t}`;
+    showToast('✓ 목표 저장됐어요!');
+  }catch(e){
+    showToast('저장 오류: '+e.message);
+  }
+  btn.innerHTML='💾 저장';
+  btn.disabled=false;
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+loadGoals();
+</script>
+</body>
+</html>
