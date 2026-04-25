@@ -97,6 +97,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
     <a href="app.html" class="hdr-tab">📅 만캘</a>
     <a href="livedata.html" class="hdr-tab active">📊 보유</a>
     <a href="report.html" class="hdr-tab">📄 보고</a>
+    <a href="goals.html" class="hdr-tab">🎯 목표</a>
   </div>
   <div class="hdr-r">
     <button class="btn btn-sm" onclick="loadData()"><span id="syncIcon">↺</span> 새로고침</button>
@@ -126,7 +127,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
     <div class="section-hdr">
       <div class="section-title">📈 단계별 보유현황</div>
       <div class="section-badge" id="totalBadge">총 0명</div>
-      <span style="font-size:11px;color:var(--t3)">목표 클릭해서 수정 가능</span>
+      <span style="font-size:11px;color:var(--t3)">🎯 목표 페이지에서 수정</span>
       <button class="btn btn-sm" onclick="downloadSection('stageSection','단계별보유현황')" style="margin-left:auto;font-size:11px">⬇ 저장</button>
     </div>
     <div id="stageSection">
@@ -181,6 +182,7 @@ const SB_URL='https://tduhoyzgbkwhrvfadsww.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkdWhveXpnYmt3aHJ2ZmFkc3d3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjI3NjMsImV4cCI6MjA5MjQ5ODc2M30.yoAiBzAJCHnp_gtWzO2WooeIlVh8xRnpCmBZETrX-wg';
 const SB_HDR={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
 const LD_ID='00000000-0000-0000-0000-000000000002';
+const GOALS_ID='00000000-0000-0000-0000-000000000003';
 const MTG_ID='00000000-0000-0000-0000-000000000001';
 const STAGES=['CH','H','D1','D2','B','CT'];
 const STAGE_LABELS={CH:'찾기',H:'합자',D1:'육따',D2:'영따',B:'복',CT:'센확'};
@@ -207,10 +209,10 @@ function goalsKey(){
 }
 function getGoals(){
   const {t,tp}=goalsKey();
-  if(!ldData.goals)ldData.goals={};
-  if(!ldData.goals[t])ldData.goals[t]={};
-  if(!ldData.goals[t][tp])ldData.goals[t][tp]={};
-  return ldData.goals[t][tp];
+  if(!ldData.goals)return{};
+  // goals 구조: {4월: {청년: {화정: {SE,H,D1,D2}}}}
+  const byTerm=ldData.goals[t]||{};
+  return byTerm[tp]||{};
 }
 
 function getOrderedRegions(people){
@@ -254,36 +256,9 @@ async function loadData(){
       const d=d1[0].data;
       ldData.people=d.people||[];
       // goals 구조 마이그레이션: flat → term별
-      const rawGoals=d.goals||{'전체':{},'4월':{},'5월':{}};
-      // goals 구조: {term: {type: {region: {SE,H,D1,D2}}}}
-      // 마이그레이션: 기존 flat/term 구조 → term+type 구조
-      function migrateGoals(raw){
-        if(!raw||typeof raw!=='object')return{'전체':{'전체':{}}};
-        // 이미 새 구조인지 확인 (값이 객체의 객체의 객체)
-        const firstVal=Object.values(raw)[0];
-        if(firstVal&&typeof firstVal==='object'){
-          const secondVal=Object.values(firstVal)[0];
-          if(secondVal&&typeof secondVal==='object'){
-            const thirdVal=Object.values(secondVal)[0];
-            if(thirdVal&&typeof thirdVal==='object'&&('SE' in thirdVal||'H' in thirdVal||'D1' in thirdVal)){
-              return raw; // 이미 새 구조
-            }
-          }
-        }
-        // 구버전 → 새 구조로 변환
-        const newGoals={'전체':{'전체':{}},'4월':{'전체':{},'청년':{},'협력교회':{}},'5월':{'전체':{},'청년':{},'협력교회':{}}};
-        // 기존 데이터 전체 탭에 이관
-        if(raw['전체']||raw['4월']||raw['5월']){
-          Object.entries(raw).forEach(([t,rv])=>{
-            if(!newGoals[t])newGoals[t]={};
-            newGoals[t]['전체']=rv||{};
-          });
-        } else {
-          newGoals['전체']['전체']=raw;
-        }
-        return newGoals;
-      }
-      ldData.goals=migrateGoals(rawGoals);
+      // goals는 003번 행에서 별도 로드 (아래에서 처리)
+      const rawGoals={};
+      ldData.goals={};
       ldData.regionList=d.regionList||[];
       ldData.regionOrder=d.regionOrder||[];
     }
@@ -292,6 +267,13 @@ async function loadData(){
       const d2=await r2.json();
       if(d2&&d2[0]&&d2[0].data) ldData.regionOrder=d2[0].data.regionList||[];
     }
+    // goals 003번 행에서 별도 로드
+    try{
+      const rg=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${GOALS_ID}&select=data`,{headers:SB_HDR});
+      const dg=await rg.json();
+      if(dg&&dg[0]&&dg[0].data) ldData.goals=dg[0].data;
+      else ldData.goals={};
+    }catch(e){ldData.goals={};}
     render();
   }catch(e){showToast('로드 오류: '+e.message);}
   document.getElementById('syncIcon').textContent='↺';
@@ -301,7 +283,7 @@ async function saveData(){
   try{
     const resp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${LD_ID}`,{
       method:'PATCH',headers:{...SB_HDR,'Prefer':'return=minimal'},
-      body:JSON.stringify({data:ldData})
+      body:JSON.stringify({data:{people:ldData.people,regionList:ldData.regionList,regionOrder:ldData.regionOrder}})
     });
     if(!resp.ok){const t=await resp.text();showToast('저장 오류: '+resp.status);console.error(t);}
     else{showToast('✓ 저장됨');}
@@ -380,19 +362,8 @@ function renderStageTable(){
 }
 
 function editGoal(region,stage,el){
-  el.classList.add('editing');el.contentEditable='true';el.focus();
-  const range=document.createRange();range.selectNodeContents(el);
-  const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
-  function finish(){
-    el.contentEditable='false';el.classList.remove('editing');
-    const val=parseInt(el.textContent)||0;
-    const goals=getGoals();
-    if(!goals[region])goals[region]={};
-    goals[region][stage]=val;el.textContent=val||'—';
-    saveData();renderStageTable();
-  }
-  el.onblur=finish;
-  el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();finish();}if(e.key==='Escape')finish();};
+  // 목표는 goals.html에서만 수정 가능
+  showToast('목표는 🎯 목표 페이지에서 수정해주세요');
 }
 
 function renderMeetTables(){
