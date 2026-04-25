@@ -49,8 +49,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 /* 표1 */
 .stage-table{width:100%;border-collapse:collapse;font-size:14px}
 .stage-table th{padding:9px 12px;font-size:12px;font-weight:700;text-align:center;border:1px solid var(--bd);white-space:nowrap}
-.stage-table td{padding:9px 12px;border:1px solid var(--bd);text-align:center;font-family:'DM Mono',monospace;font-weight:700;font-size:15px;vertical-align:middle}
-.stage-table td.region-td{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:14px;background:#f0f9ff;text-align:center}
+.stage-table td{padding:9px 12px;border:1px solid var(--bd);text-align:center;font-family:'DM Mono',monospace;font-weight:700;font-size:16px;vertical-align:middle;color:var(--t1)}
+.stage-table td.region-td{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:16px;background:#f0f9ff;text-align:center}
 .stage-table tr.total-row td{background:var(--acc-lt);font-weight:700;color:var(--acc-dk)}
 .stage-table tr.total-row td.region-td{background:var(--acc);color:#fff}
 .goal-cell{cursor:pointer;border-radius:4px;padding:2px 4px;transition:all .13s;min-width:28px;display:inline-block}
@@ -66,10 +66,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .stage-meet-title{font-size:14px;font-weight:700;color:#fff}
 .stage-meet-cnt{font-family:'DM Mono',monospace;font-size:11px;background:rgba(255,255,255,.25);padding:2px 8px;border-radius:10px;color:#fff}
 .stage-meet-tog{margin-left:auto;font-size:11px;color:rgba(255,255,255,.7)}
-.meet-table{width:100%;border-collapse:collapse;font-size:12px}
-.meet-table th{padding:8px 10px;font-size:10px;font-weight:700;text-align:center;border:1px solid var(--bd);white-space:nowrap;letter-spacing:.04em}
-.meet-table td{padding:7px 10px;border:1px solid var(--bd);text-align:center;vertical-align:middle}
-.meet-table td.region-td{font-weight:700;font-size:12px;background:#f0f9ff;text-align:center;white-space:nowrap}
+.meet-table{width:100%;border-collapse:collapse;font-size:14px}
+.meet-table th{padding:9px 12px;font-size:13px;font-weight:700;text-align:center;border:1px solid var(--bd);white-space:nowrap}
+.meet-table td{padding:8px 12px;border:1px solid var(--bd);text-align:center;vertical-align:middle;font-size:14px}
+.meet-table td.region-td{font-weight:700;font-size:15px;background:#f0f9ff;text-align:center;white-space:nowrap}
 .meet-table tr.total-row td{background:var(--acc-lt);font-weight:700;font-family:'DM Mono',monospace}
 .meet-table tr.total-row td.region-td{background:var(--acc);color:#fff}
 .chip-wrap{display:flex;flex-wrap:wrap;gap:2px;justify-content:center}
@@ -166,6 +166,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
     <div class="section-hdr">
       <div class="section-title">📅 만남 현황</div>
       <div class="section-badge" id="meetBadge">오늘 기준</div>
+      <button class="btn btn-sm" onclick="downloadMeet()" style="margin-left:auto;font-size:11px">⬇ 저장</button>
     </div>
     <div id="meetWrap">
       <div style="padding:40px;text-align:center;color:var(--t3)">데이터가 없습니다</div>
@@ -289,18 +290,16 @@ function renderStageTable(){
   const sc={CH:'#0369a1',H:'#6d28d9',D1:'#92400e',D2:'#c2410c',B:'#065f46',CT:'#3730a3'};
 
   function rateCell(cnt,goal){
-    if(!goal)return'<span style="color:var(--t3)">—</span>';
+    if(!goal)return'';
     const r=Math.round(cnt/goal*100);
-    // 그라데이션 색상: 0%=빨강, 50%=흰색, 70%+=초록
-    function rateColor(r){
-      if(r>=100)return{bg:'#dcfce7',color:'#15803d',border:'#86efac'};
-      if(r>=70)return{bg:'#f0fdf4',color:'#16a34a',border:'#bbf7d0'};
-      if(r>=50)return{bg:'#fff',color:'#6b7280',border:'#e5e7eb'};
-      if(r>=30)return{bg:'#fff7ed',color:'#ea580c',border:'#fed7aa'};
-      return{bg:'#fef2f2',color:'#dc2626',border:'#fca5a5'};
-    }
-    const c=rateColor(r);
-    return`<span style="background:${c.bg};color:${c.color};border:1px solid ${c.border};border-radius:6px;padding:3px 8px;font-size:13px;font-weight:700;display:inline-block;min-width:48px;text-align:center">${r}%</span>`;
+    return r;// 숫자만 반환, 셀 색상은 renderStageTable에서 처리
+  }
+  function rateCellStyle(r){
+    if(r===null||r===undefined)return{bg:'transparent',color:'var(--t3)'};
+    if(r>=100)return{bg:'#dcfce7',color:'#15803d'};
+    if(r>=70)return{bg:'#fef9c3',color:'#854d0e'};
+    if(r>=50)return{bg:'#ffedd5',color:'#c2410c'};
+    return{bg:'#fee2e2',color:'#dc2626'};
   }
 
   // 목표 합산
@@ -316,15 +315,13 @@ function renderStageTable(){
     const cD2_up=c.D2+c.B+c.CT;
     return`<tr>
       <td class="region-td">${r}</td>
-      <td><span class="goal-cell" onclick="editGoal('${r}','SE',this)">${gSE||'—'}</span></td>
-      <td><span class="goal-cell" onclick="editGoal('${r}','D2',this)">${gD2||'—'}</span></td>
-      <td><span class="goal-cell" onclick="editGoal('${r}','D1',this)">${gD1||'—'}</span></td>
-      <td><span class="goal-cell" onclick="editGoal('${r}','H',this)">${gH||'—'}</span></td>
+      <td style="background:#eef6ff"><span class="goal-cell" onclick="editGoal('${r}','SE',this)">${gSE||'—'}</span></td>
+      <td style="background:#eef6ff"><span class="goal-cell" onclick="editGoal('${r}','D2',this)">${gD2||'—'}</span></td>
+      <td style="background:#eef6ff"><span class="goal-cell" onclick="editGoal('${r}','D1',this)">${gD1||'—'}</span></td>
+      <td style="background:#eef6ff"><span class="goal-cell" onclick="editGoal('${r}','H',this)">${gH||'—'}</span></td>
       ${STAGES.map(s=>`<td style="color:${sc[s]}">${c[s]||0}</td>`).join('')}
       <td style="color:var(--acc-dk);font-weight:700">${c.total}</td>
-      <td>${rateCell(cH_up,gH)}</td>
-      <td>${rateCell(cD1_up,gD1)}</td>
-      <td>${rateCell(cD2_up,gD2)}</td>
+      ${(()=>{const rv=[rateCell(cH_up,gH),rateCell(cD1_up,gD1),rateCell(cD2_up,gD2)];return rv.map(r=>{if(r==='')return'<td style="color:var(--t3);font-size:16px">—</td>';const s=rateCellStyle(r);return`<td style="background:${s.bg};color:${s.color};font-weight:700;font-size:16px">${r}%</td>`;}).join('');})()}
     </tr>`;
   });
 
@@ -341,9 +338,7 @@ function renderStageTable(){
     <td>${totGH||'—'}</td>
     ${STAGES.map(s=>`<td>${tot[s]||0}</td>`).join('')}
     <td>${tot.total}</td>
-    <td>${rateCell(tH_up,totGH)}</td>
-    <td>${rateCell(tD1_up,totGD1)}</td>
-    <td>${rateCell(tD2_up,totGD2)}</td>
+    ${(()=>{const rv=[rateCell(tH_up,totGH),rateCell(tD1_up,totGD1),rateCell(tD2_up,totGD2)];return rv.map(r=>{if(r==='')return'<td style="color:var(--t3);font-size:16px">—</td>';const s=rateCellStyle(r);return`<td style="background:${s.bg};color:${s.color};font-weight:700;font-size:16px">${r}%</td>`;}).join('');})()}
   </tr>`);
   document.getElementById('stageBody').innerHTML=rows.join('');
 }
@@ -388,8 +383,8 @@ function renderMeetTables(){
     const colTots={today:0,d1:0,d2:0,after:0,none:0};
     sp.forEach(p=>{const nd=p.nextDate;if(!nd||nd<tod)colTots.none++;else if(nd===tod)colTots.today++;else if(nd===d1)colTots.d1++;else if(nd===d2)colTots.d2++;else colTots.after++;});
     const thCols=DATE_COLS.map(c=>`<th style="${c.isToday?'background:#fef9c3;color:#92400e':'background:var(--s2);color:var(--t2)'}">
-      <span style="display:block;font-weight:700">${c.label}</span>
-      ${c.date?`<span style="font-size:9px;opacity:.7">${fmtDate(c.date)}(${getDow(c.date)})</span>`:''}
+      <span style="display:block;font-weight:700;font-size:14px">${c.label}</span>
+      ${c.date?`<span style="font-size:11px;opacity:.8">${fmtDate(c.date)}(${getDow(c.date)})</span>`:''}
     </th>`).join('');
     const regionRows=regions.map(r=>{
       const rp=sp.filter(p=>p.region===r);
@@ -438,6 +433,19 @@ function toggleStage(hdr){
   const tog=hdr.querySelector('.stage-meet-tog');
   if(body.style.display==='none'){body.style.display='';tog.textContent='▲';}
   else{body.style.display='none';tog.textContent='▼';}
+}
+
+function downloadMeet(){
+  const el=document.getElementById('meetWrap');
+  if(!el){showToast('데이터가 없어요');return;}
+  showToast('이미지 저장 중...');
+  html2canvas(el,{scale:3,backgroundColor:'#ffffff',useCORS:true,logging:false}).then(canvas=>{
+    const link=document.createElement('a');
+    link.download='만남현황_'+new Date().toISOString().slice(0,10)+'.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    showToast('✓ 저장됐어요!');
+  }).catch(e=>showToast('오류: '+e.message));
 }
 
 function downloadSection(id, filename){
