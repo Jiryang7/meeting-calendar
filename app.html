@@ -147,13 +147,17 @@ body{font-family:'GangwonEduTt','Noto Sans KR',sans-serif;background:var(--bg);c
 
 <!-- HEADER -->
 <div class="hdr">
-  <span class="hdr-logo">• 만남 캘린더</span>
-  <a href="app.html" class="hdr-btn hdr-acc" style="text-decoration:none;font-size:11px">📅 만캘</a>
-  <a href="livedata.html" class="hdr-btn" style="text-decoration:none;font-size:11px">📊 보유</a>
-  <a href="report.html" class="hdr-btn" style="text-decoration:none;font-size:11px">📄 보고</a>
-  <button class="hdr-btn" onclick="loadData()" id="refreshBtn">↺</button>
-  <button class="hdr-btn" onclick="doLogout()">나가기</button>
-  <button class="hdr-btn hdr-acc" onclick="openAddModal()">+ 추가</button>
+  <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0">
+    <span class="hdr-logo" style="font-size:13px;white-space:nowrap">만남캘</span>
+    <a href="app.html" class="hdr-btn hdr-acc" style="text-decoration:none;font-size:10px;padding:4px 7px">📅</a>
+    <a href="livedata.html" class="hdr-btn" style="text-decoration:none;font-size:10px;padding:4px 7px">📊</a>
+    <a href="report.html" class="hdr-btn" style="text-decoration:none;font-size:10px;padding:4px 7px">📄</a>
+  </div>
+  <div style="display:flex;gap:4px;flex-shrink:0">
+    <button class="hdr-btn" onclick="loadData()" id="refreshBtn" style="padding:5px 8px">↺</button>
+    <button class="hdr-btn" onclick="doLogout()" style="font-size:11px;padding:5px 8px">나가기</button>
+    <button class="hdr-btn hdr-acc" onclick="openAddModal()" style="font-size:12px;padding:5px 10px">+ 추가</button>
+  </div>
 </div>
 
 <!-- FILTER BAR -->
