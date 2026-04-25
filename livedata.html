@@ -200,6 +200,19 @@ function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r.toIS
 function fmtDate(d){const r=new Date(d+'T00:00:00');return`${r.getMonth()+1}/${r.getDate()}`;}
 function getDow(d){return['일','월','화','수','목','금','토'][new Date(d+'T00:00:00').getDay()];}
 
+function goalsKey(){
+  const t=filterTerm==='전체'?'전체':filterTerm;
+  const tp=filterType==='전체'?'전체':filterType;
+  return{t,tp};
+}
+function getGoals(){
+  const {t,tp}=goalsKey();
+  if(!ldData.goals)ldData.goals={};
+  if(!ldData.goals[t])ldData.goals[t]={};
+  if(!ldData.goals[t][tp])ldData.goals[t][tp]={};
+  return ldData.goals[t][tp];
+}
+
 function getOrderedRegions(people){
   const all=[...new Set(people.map(p=>p.region).filter(Boolean))];
   const order=ldData.regionOrder||[];
