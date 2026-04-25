@@ -242,11 +242,35 @@ async function loadData(){
       ldData.people=d.people||[];
       // goals 구조 마이그레이션: flat → term별
       const rawGoals=d.goals||{'전체':{},'4월':{},'5월':{}};
-      if(rawGoals['전체']||rawGoals['4월']||rawGoals['5월']){
-        ldData.goals=rawGoals; // 이미 새 구조
-      } else {
-        ldData.goals={'전체':rawGoals,'4월':{},'5월':{}}; // 기존 flat 구조 마이그레이션
+      // goals 구조: {term: {type: {region: {SE,H,D1,D2}}}}
+      // 마이그레이션: 기존 flat/term 구조 → term+type 구조
+      function migrateGoals(raw){
+        if(!raw||typeof raw!=='object')return{'전체':{'전체':{}}};
+        // 이미 새 구조인지 확인 (값이 객체의 객체의 객체)
+        const firstVal=Object.values(raw)[0];
+        if(firstVal&&typeof firstVal==='object'){
+          const secondVal=Object.values(firstVal)[0];
+          if(secondVal&&typeof secondVal==='object'){
+            const thirdVal=Object.values(secondVal)[0];
+            if(thirdVal&&typeof thirdVal==='object'&&('SE' in thirdVal||'H' in thirdVal||'D1' in thirdVal)){
+              return raw; // 이미 새 구조
+            }
+          }
+        }
+        // 구버전 → 새 구조로 변환
+        const newGoals={'전체':{'전체':{}},'4월':{'전체':{},'청년':{},'협력교회':{}},'5월':{'전체':{},'청년':{},'협력교회':{}}};
+        // 기존 데이터 전체 탭에 이관
+        if(raw['전체']||raw['4월']||raw['5월']){
+          Object.entries(raw).forEach(([t,rv])=>{
+            if(!newGoals[t])newGoals[t]={};
+            newGoals[t]['전체']=rv||{};
+          });
+        } else {
+          newGoals['전체']['전체']=raw;
+        }
+        return newGoals;
       }
+      ldData.goals=migrateGoals(rawGoals);
       ldData.regionList=d.regionList||[];
       ldData.regionOrder=d.regionOrder||[];
     }
@@ -285,8 +309,7 @@ function renderStageTable(){
   regions.forEach(r=>{countMap[r]={total:0};STAGES.forEach(s=>countMap[r][s]=0);});
   people.forEach(p=>{if(!p.region||!countMap[p.region])return;countMap[p.region][p.stage]=(countMap[p.region][p.stage]||0)+1;countMap[p.region].total++;totRow[p.stage]=(totRow[p.stage]||0)+1;totRow.total++;});
   document.getElementById('totalBadge').textContent=`총 ${totRow.total}명`;
-  const termKey=filterTerm==='전체'?'전체':filterTerm;
-  const goals=(ldData.goals&&ldData.goals[termKey])||{};
+  const goals=getGoals();
   const sc={CH:'#0369a1',H:'#6d28d9',D1:'#92400e',D2:'#c2410c',B:'#065f46',CT:'#3730a3'};
 
   function rateCell(cnt,goal){
@@ -350,10 +373,9 @@ function editGoal(region,stage,el){
   function finish(){
     el.contentEditable='false';el.classList.remove('editing');
     const val=parseInt(el.textContent)||0;
-    const termKey=filterTerm==='전체'?'전체':filterTerm;
-    if(!ldData.goals[termKey])ldData.goals[termKey]={};
-    if(!ldData.goals[termKey][region])ldData.goals[termKey][region]={};
-    ldData.goals[termKey][region][stage]=val;el.textContent=val||'—';
+    const goals=getGoals();
+    if(!goals[region])goals[region]={};
+    goals[region][stage]=val;el.textContent=val||'—';
     saveData();renderStageTable();
   }
   el.onblur=finish;
