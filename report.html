@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>만남 양식 생성기</title>
+<title>만남 보고 양식</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -11,84 +11,61 @@
   --bg:#f4f3ef;--white:#fff;--bd:#dddcd2;--s2:#eae9e4;
   --t1:#1a1916;--t2:#6b6960;--t3:#aaa99f;
   --acc:#FAC608;--acc-dk:#c49600;--acc-lt:#fffae8;
-  --ok:#15803d;--ok-bg:#dcfce7;
-  --dp:#dc2626;--dp-bg:#fee2e2;
 }
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
 
-.hdr{height:52px;background:var(--white);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;gap:10px;position:sticky;top:0;z-index:100}
-.hdr-logo{font-size:15px;font-weight:700;flex:1}
-.hdr-tab{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--white);color:var(--t2);text-decoration:none;transition:all .13s}
+.hdr{height:50px;background:var(--white);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;gap:6px;position:sticky;top:0;z-index:100}
+.hdr-logo{font-size:13px;font-weight:700;margin-right:4px;white-space:nowrap}
+.hdr-tab{padding:4px 9px;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--white);color:var(--t2);text-decoration:none;transition:all .13s;white-space:nowrap}
 .hdr-tab:hover{border-color:var(--acc);background:var(--acc-lt)}
 .hdr-tab.active{background:var(--acc);color:#1a1400;border-color:var(--acc);font-weight:700}
 
-.content{max-width:800px;margin:0 auto;padding:20px}
+.content{max-width:720px;margin:0 auto;padding:16px}
 
-/* 필터 카드 */
-.filter-card{background:var(--white);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:16px}
-.filter-title{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--t1)}
-.filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.filter-group label{display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px;letter-spacing:.04em}
-.filter-group select{width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);outline:none;cursor:pointer}
-.filter-group select:focus{border-color:var(--acc)}
+.card{background:var(--white);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px}
+.card-title{font-size:14px;font-weight:700;margin-bottom:14px}
 
-/* 날짜 범위 */
-.date-range{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:14px}
-.date-range input{padding:9px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);outline:none;width:100%}
-.date-range input:focus{border-color:var(--acc)}
-.date-sep{font-size:12px;color:var(--t3);text-align:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--t3);margin-bottom:4px;letter-spacing:.04em}
+.field select,.field input{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:7px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);outline:none}
+.field select:focus,.field input:focus{border-color:var(--acc)}
 
-/* 버튼들 */
-.btn-row{display:flex;gap:8px;flex-wrap:wrap}
-.btn{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .13s}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.btn{padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans KR',sans-serif;transition:all .13s}
 .btn-acc{background:var(--acc);color:#1a1400}
-.btn-acc:hover{background:var(--acc-dk)}
-.btn-secondary{background:var(--white);color:var(--t1);border:1px solid var(--bd)}
-.btn-secondary:hover{background:var(--s2)}
-.btn-copy{background:#0ea5e9;color:#fff}
-.btn-copy:hover{background:#0284c7}
+.btn-sec{background:var(--white);color:var(--t1);border:1px solid var(--bd)}
+.btn-sec:hover{background:var(--s2)}
+.btn-blue{background:#0ea5e9;color:#fff}
+.btn-blue:hover{background:#0284c7}
+.btn-red{background:#fee2e2;color:#dc2626;border:1px solid #fca5a5}
 
-/* 결과 영역 */
-.result-card{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:16px}
-.result-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);background:var(--s2)}
-.result-title{font-size:13px;font-weight:700}
-.result-body{padding:16px}
-pre{font-family:'DM Mono',monospace;font-size:12px;line-height:1.8;white-space:pre-wrap;word-break:break-all;background:var(--bg);border-radius:8px;padding:14px;max-height:500px;overflow-y:auto;color:var(--t1)}
+.result-card{background:var(--white);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:14px}
+.result-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--bd);background:var(--s2)}
+.result-title{font-size:12px;font-weight:700}
+.result-btns{display:flex;gap:5px}
+pre{font-family:'DM Mono',monospace;font-size:11.5px;line-height:1.9;white-space:pre-wrap;word-break:break-all;background:var(--bg);border-radius:8px;padding:12px;max-height:480px;overflow-y:auto;color:var(--t1)}
 
-/* 토스트 */
-.toast-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
-.toast{background:var(--t1);color:#fff;border-radius:20px;padding:9px 20px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity .2s}
+.toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;pointer-events:none}
+.toast{background:var(--t1);color:#fff;border-radius:20px;padding:8px 18px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity .2s}
 .toast.show{opacity:1}
-
-/* 스핀 */
-.spin{width:13px;height:13px;border:2px solid rgba(26,20,0,.2);border-top-color:var(--t1);border-radius:50%;animation:sp .6s linear infinite;display:inline-block;vertical-align:middle}
+.spin{width:12px;height:12px;border:2px solid rgba(26,20,0,.2);border-top-color:var(--t1);border-radius:50%;animation:sp .6s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
-
-.empty-msg{padding:40px;text-align:center;color:var(--t3);font-size:13px}
-
-@media(max-width:600px){
-  .filter-grid{grid-template-columns:1fr}
-  .date-range{grid-template-columns:1fr auto 1fr}
-}
 </style>
 </head>
 <body>
 
 <div class="hdr">
-  <span class="hdr-logo">📄 만남 양식 생성기</span>
+  <span class="hdr-logo">📄 보고양식</span>
   <a href="app.html" class="hdr-tab">📅 만캘</a>
   <a href="livedata.html" class="hdr-tab">📊 보유</a>
   <a href="report.html" class="hdr-tab active">📄 보고</a>
 </div>
 
 <div class="content">
-
-  <!-- 필터 카드 -->
-  <div class="filter-card">
-    <div class="filter-title">📋 양식 생성 설정</div>
-
-    <div class="filter-grid">
-      <div class="filter-group">
+  <div class="card">
+    <div class="card-title">📋 양식 생성 설정</div>
+    <div class="grid2">
+      <div class="field">
         <label>개강</label>
         <select id="fTerm">
           <option value="">전체</option>
@@ -96,7 +73,7 @@ pre{font-family:'DM Mono',monospace;font-size:12px;line-height:1.8;white-space:p
           <option value="5월">5월개강</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="field">
         <label>구분</label>
         <select id="fType">
           <option value="">전체</option>
@@ -104,54 +81,53 @@ pre{font-family:'DM Mono',monospace;font-size:12px;line-height:1.8;white-space:p
           <option value="협력교회">협력교회</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="field">
         <label>지역</label>
         <select id="fRegion">
           <option value="">전체 지역</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="field">
         <label>표시 형식</label>
         <select id="fFormat">
-          <option value="daily">일별 만남 현황</option>
-          <option value="summary">지역 요약</option>
+          <option value="daily">만남캘린더 (일별)</option>
+          <option value="3days">3일 만남현황 (오늘~모레)</option>
+          <option value="holding">보유데이터 현황</option>
         </select>
       </div>
     </div>
 
-    <div class="date-range">
-      <div>
-        <label style="display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px;letter-spacing:.04em">시작일</label>
+    <div class="grid2" id="dateRangeWrap">
+      <div class="field">
+        <label>시작일</label>
         <input type="date" id="fStart">
       </div>
-      <div class="date-sep" style="margin-top:20px">~</div>
-      <div>
-        <label style="display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:5px;letter-spacing:.04em">종료일</label>
+      <div class="field">
+        <label>종료일</label>
         <input type="date" id="fEnd">
       </div>
     </div>
 
     <div class="btn-row">
       <button class="btn btn-acc" onclick="generate()" id="genBtn">✨ 양식 생성</button>
-      <button class="btn btn-secondary" onclick="setThisWeek()">이번 주</button>
-      <button class="btn btn-secondary" onclick="setToday()">오늘만</button>
+      <button class="btn btn-sec" onclick="setThisWeek()">이번 주</button>
+      <button class="btn btn-sec" onclick="setToday()">오늘만</button>
+      <button class="btn btn-red" onclick="resetResult()">✕ 초기화</button>
     </div>
   </div>
 
-  <!-- 결과 -->
   <div class="result-card" id="resultCard" style="display:none">
     <div class="result-hdr">
       <span class="result-title" id="resultTitle">생성된 양식</span>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-copy" onclick="copyText()" style="padding:6px 12px;font-size:12px">📋 복사</button>
-        <button class="btn btn-secondary" onclick="downloadTxt()" style="padding:6px 12px;font-size:12px">⬇ 다운로드</button>
+      <div class="result-btns">
+        <button class="btn btn-blue" onclick="copyText()" style="padding:5px 11px;font-size:11px">📋 복사</button>
+        <button class="btn btn-sec" onclick="downloadTxt()" style="padding:5px 11px;font-size:11px">⬇ 저장</button>
       </div>
     </div>
-    <div class="result-body">
+    <div style="padding:12px">
       <pre id="resultPre"></pre>
     </div>
   </div>
-
 </div>
 
 <div class="toast-wrap"><div class="toast" id="toast"></div></div>
@@ -159,49 +135,53 @@ pre{font-family:'DM Mono',monospace;font-size:12px;line-height:1.8;white-space:p
 <script>
 const SB_URL='https://tduhoyzgbkwhrvfadsww.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkdWhveXpnYmt3aHJ2ZmFkc3d3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjI3NjMsImV4cCI6MjA5MjQ5ODc2M30.yoAiBzAJCHnp_gtWzO2WooeIlVh8xRnpCmBZETrX-wg';
-const SB_ID='00000000-0000-0000-0000-000000000001';
-const SB_HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+const SB_ID_MTG='00000000-0000-0000-0000-000000000001';
+const SB_ID_LD='00000000-0000-0000-0000-000000000002';
+const HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
 
 let db={meetings:[]},regionList=[],cohortList=[];
+let ldPeople=[],ldRegionList=[];
 let generatedText='';
 
-/* ── AUTH ── */
 function getSession(){try{return JSON.parse(localStorage.getItem('mtg-user'));}catch{return null;}}
 if(!getSession()){window.location.href='index.html';}
 
-/* ── INIT ── */
 async function init(){
-  // 날짜 기본값 (이번 주 월~일)
   setThisWeek();
-
-  // 캐시 먼저
+  // 캐시
   const cache=localStorage.getItem('mtg-cache');
-  if(cache){const s=JSON.parse(cache);db=s.db||{meetings:[]};regionList=s.regionList||[];cohortList=s.cohortList||[];buildRegionSel();}
+  if(cache){const s=JSON.parse(cache);db=s.db||{meetings:[]};regionList=s.regionList||[];cohortList=s.cohortList||[];}
 
-  // Supabase
   try{
-    const resp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${SB_ID}&select=data`,{headers:SB_HDR});
-    const rows=await resp.json();
-    if(rows&&rows[0]&&rows[0].data){
-      const d=rows[0].data;
-      db=d.db||{meetings:[]};
-      regionList=d.regionList||[];
-      cohortList=d.cohortList||[];
-      buildRegionSel();
-    }
+    // 만캘 데이터
+    const r1=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${SB_ID_MTG}&select=data`,{headers:HDR});
+    const d1=await r1.json();
+    if(d1&&d1[0]&&d1[0].data){const d=d1[0].data;db=d.db||{meetings:[]};regionList=d.regionList||[];cohortList=d.cohortList||[];}
+    // 보유데이터
+    const r2=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.${SB_ID_LD}&select=data`,{headers:HDR});
+    const d2=await r2.json();
+    if(d2&&d2[0]&&d2[0].data){ldPeople=d2[0].data.people||[];ldRegionList=d2[0].data.regionList||[];}
   }catch(e){console.warn(e);}
+
+  buildRegionSel();
+
+  // 형식 바꾸면 날짜 범위 숨기기
+  document.getElementById('fFormat').addEventListener('change',e=>{
+    const show=e.target.value!=='3days'&&e.target.value!=='holding';
+    document.getElementById('dateRangeWrap').style.display=show?'':'none';
+  });
 }
 
 function buildRegionSel(){
+  const allR=[...new Set([...regionList,...ldRegionList])];
   const sel=document.getElementById('fRegion');
   const cur=sel.value;
-  sel.innerHTML='<option value="">전체 지역</option>'+regionList.map(r=>`<option value="${r}">${r}</option>`).join('');
+  sel.innerHTML='<option value="">전체 지역</option>'+allR.map(r=>`<option value="${r}">${r}</option>`).join('');
   if(cur)sel.value=cur;
 }
 
 function setThisWeek(){
-  const now=new Date();
-  const day=now.getDay();
+  const now=new Date(),day=now.getDay();
   const mon=new Date(now);mon.setDate(now.getDate()-(day===0?6:day-1));
   const sun=new Date(mon);sun.setDate(mon.getDate()+6);
   document.getElementById('fStart').value=mon.toISOString().slice(0,10);
@@ -212,11 +192,13 @@ function setToday(){
   document.getElementById('fStart').value=t;
   document.getElementById('fEnd').value=t;
 }
+function resetResult(){
+  document.getElementById('resultCard').style.display='none';
+  generatedText='';
+}
 
-/* ── 상태 이모지 ── */
 function cfEmoji(m){
-  const r=m.resultStatus||'';
-  const c=m.confirmStatus||'미확티';
+  const r=m.resultStatus||'',c=m.confirmStatus||'미확티';
   if(r==='단계향상')return'🎉';
   if(r==='만남유지')return'✔️';
   if(r==='만남후탈락')return'🚫';
@@ -227,7 +209,6 @@ function cfEmoji(m){
   if(c==='만남전탈락')return'❌';
   return'🔴';
 }
-
 function countStats(list){
   return{
     total:list.length,
@@ -236,27 +217,30 @@ function countStats(list){
     ok:list.filter(m=>m.confirmStatus==='확티'&&!m.resultStatus).length,
     pt:list.filter(m=>m.confirmStatus==='전티완료'&&!m.resultStatus).length,
     un:list.filter(m=>(m.confirmStatus||'미확티')==='미확티'&&!m.resultStatus).length,
-    delay:list.filter(m=>m.confirmStatus==='만남밀림'||m.confirmStatus==='만남연기').length,
+    delay:list.filter(m=>m.confirmStatus==='만남밀림').length,
     afterDp:list.filter(m=>m.resultStatus==='만남후탈락').length,
     beforeDp:list.filter(m=>m.resultStatus==='탈락전'||m.confirmStatus==='만남전탈락').length,
   };
 }
-
-function fmtDateKo(dateStr){
-  if(!dateStr)return'';
-  const d=new Date(dateStr+'T00:00:00');
+function fmtDateKo(d){
+  const dt=new Date(d+'T00:00:00');
   const days=['일','월','화','수','목','금','토'];
-  return`${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+  return`${dt.getMonth()+1}월 ${dt.getDate()}일 (${days[dt.getDay()]})`;
 }
-
-function fmtDateShort(dateStr){
-  if(!dateStr)return'시간미정';
-  const d=new Date(dateStr+'T00:00:00');
+function fmtShort(d){
+  if(!d)return'미정';
+  const dt=new Date(d+'T00:00:00');
   const days=['일','월','화','수','목','금','토'];
-  return`${d.getMonth()}.${String(d.getDate()).padStart(2,'0')}(${days[d.getDay()]})`;
+  return`${dt.getMonth()}.${String(dt.getDate()).padStart(2,'0')}(${days[dt.getDay()]})`;
 }
+function stageCode(s){
+  if(!s)return'기타';
+  const u=s.toString().toUpperCase();
+  for(const c of ['CH','H','D1','D2','B','CT']){if(u.includes(c))return c;}
+  return s;
+}
+function addDays(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
 
-/* ── 생성 ── */
 async function generate(){
   const btn=document.getElementById('genBtn');
   btn.innerHTML='<span class="spin"></span> 생성 중...';
@@ -265,136 +249,167 @@ async function generate(){
   const term=document.getElementById('fTerm').value;
   const type=document.getElementById('fType').value;
   const region=document.getElementById('fRegion').value;
+  const format=document.getElementById('fFormat').value;
   const start=document.getElementById('fStart').value;
   const end=document.getElementById('fEnd').value;
-  const format=document.getElementById('fFormat').value;
 
-  // 필터
-  let list=db.meetings.filter(m=>{
-    if(term&&m.term!==term)return false;
-    if(type&&m.cohort!==type)return false;
-    if(region&&m.region!==region)return false;
-    if(start&&m.date<start)return false;
-    if(end&&m.date>end)return false;
-    return true;
-  });
-
-  // 날짜 범위 생성
-  const dates=[];
-  if(start&&end){
-    const cur=new Date(start);const endD=new Date(end);
-    while(cur<=endD){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
-  } else {
-    const unique=[...new Set(list.map(m=>m.date).filter(Boolean))].sort();
-    dates.push(...unique);
-  }
-
-  // 헤더 생성
   const todayStr=new Date().toISOString().slice(0,10);
   const todayFmt=todayStr.slice(2).replace(/-/g,'.');
   const regionLabel=region||'전체';
   const termLabel=term?term+'개강':'전체개강';
-  const cohortLabel=type||'';
+  const typeLabel=type||'전체';
 
   let txt='';
 
-  if(format==='daily'){
-    // 날짜별 일정 양식
-    txt+=`⏰${todayFmt} | ${termLabel} ${cohortLabel} #${regionLabel}지역 만남캘린더\n\n`;
-    txt+=`-상태 기준표\n`;
-    txt+=`🟢확티 🟡전티완료 🔴미확티\n`;
-    txt+=`🎉단계 향상 ✔️만남완료(단향X)\n`;
-    txt+=`🔺만남 연기 ❌만남 전 탈락 🚫만남 후 탈락\n\n`;
-    txt+=`EX)\n`;
-    txt+=`🟢시간/개강/단계/섭외방식/섭-인-교\nㄴ다음만남날짜 or 탈락사유\n`;
-    txt+=`➖➖➖➖➖➖➖➖➖➖➖\n`;
+  if(format==='holding'){
+    // ── 보유데이터 현황 양식 ──
+    const filteredPeople=ldPeople.filter(p=>{
+      if(term&&p.term!==term)return false;
+      if(type&&p.cohort!==type)return false;
+      if(region&&p.region!==region)return false;
+      return true;
+    });
 
-    dates.forEach(date=>{
-      const dl=list.filter(m=>m.date===date);
+    const STAGE_ORDER=['CT','B','D2','D1','H','CH'];
+    const STAGE_LABELS={CT:'센확 CT',B:'복음방 B',D2:'영따기 D2',D1:'육따기 D1',H:'합자 H',CH:'찾기 CH'};
+
+    // 헤더
+    txt+=`🌼${termLabel} ${region?'#'+region+'지역':''} 보유데이터\n`;
+    if(type)txt+=`#${type} 개강\n`;
+    txt+=`#43. ${todayFmt.slice(3)} 마감\n\n`;
+
+    // 보유 현황 요약
+    const cnt={CH:0,H:0,D1:0,D2:0,B:0,CT:0};
+    filteredPeople.forEach(p=>{const c=stageCode(p.stage);if(cnt[c]!==undefined)cnt[c]++;});
+    txt+=`🔰보유 현황\n`;
+    txt+=`찾기${String(cnt.CH).padStart(2,'0')} 합자${String(cnt.H).padStart(2,'0')} 상담00\n`;
+    txt+=`육따${String(cnt.D1).padStart(2,'0')} 영따${String(cnt.D2).padStart(2,'0')} \n`;
+    txt+=`복음방${String(cnt.B).padStart(2,'0')} 센확${String(cnt.CT).padStart(2,'0')}\n\n`;
+    txt+=`양식)\n팀/노방/섭외자-인도자-교사/다음만남목적/다음만남일\n\n`;
+
+    // 단계별 목록
+    STAGE_ORDER.forEach(stage=>{
+      const items=filteredPeople.filter(p=>stageCode(p.stage)===stage);
+      txt+=`◼️${STAGE_LABELS[stage]} ${String(items.length).padStart(2,'0')}\n`;
+      items.forEach(p=>{
+        const team=p.team||'팀';
+        const method=p.method||'노방';
+        const people=p.people||'';
+        const purpose=p.purpose||'미정';
+        const nextDate=p.nextDate?fmtShort(p.nextDate):'미정';
+        txt+=`${team}/${method}/${people}/${purpose}/${nextDate}\n`;
+      });
+      txt+='\n';
+    });
+
+  } else if(format==='3days'){
+    // ── 3일 만남현황 ──
+    const dates=[addDays(0),addDays(1),addDays(2)];
+    const dayNames=['오늘','내일','모레'];
+
+    let list=db.meetings.filter(m=>{
+      if(term&&m.term!==term)return false;
+      if(type&&m.cohort!==type)return false;
+      if(region&&m.region!==region)return false;
+      return true;
+    });
+
+    txt+=`📅 3일 만남현황 | ${termLabel} ${typeLabel} ${region?'#'+region:''}\n`;
+    txt+=`기준: ${fmtDateKo(dates[0])} ~ ${fmtDateKo(dates[2])}\n\n`;
+
+    dates.forEach((d,i)=>{
+      const dl=list.filter(m=>m.date===d);
       const st=countStats(dl);
-      txt+=`📅 ${fmtDateKo(date)}\n`;
+      txt+=`━━━━━━━━━━━━━━━━━\n`;
+      txt+=`${dayNames[i]} | ${fmtDateKo(d)}\n`;
       txt+=`■ 총만남 ${String(st.total).padStart(2,'0')}건\n`;
       txt+=`🎉${String(st.up).padStart(2,'0')} ✔️${String(st.done).padStart(2,'0')} 🟢${String(st.ok).padStart(2,'0')} 🟡${String(st.pt).padStart(2,'0')}\n`;
       txt+=`🔴${String(st.un).padStart(2,'0')} 🔺${String(st.delay).padStart(2,'0')} 🚫${String(st.afterDp).padStart(2,'0')} ❌${String(st.beforeDp).padStart(2,'0')}\n\n`;
 
       if(dl.length){
-        // 만남목적별 그룹
         const byPurpose={};
-        dl.forEach(m=>{
-          const p=m.purpose||'기타';
-          if(!byPurpose[p])byPurpose[p]=[];
-          byPurpose[p].push(m);
-        });
-
+        dl.forEach(m=>{const p=m.purpose||'기타';if(!byPurpose[p])byPurpose[p]=[];byPurpose[p].push(m);});
         Object.entries(byPurpose).forEach(([purpose,items])=>{
           txt+=`➖${purpose} ${String(items.length).padStart(2,'0')}\n`;
           items.forEach(m=>{
             const emoji=cfEmoji(m);
-            const time=m.time||'시간미정';
-            const cohort=m.cohort||'청년';
-            const stage=m.stage||'';
-            const method=m.method||'';
-            const people=m.people||'';
-            txt+=`${emoji}${time}/${cohort}/${stage}/${method}/${people}\n`;
-            // 다음만남 or 탈락사유
-            if(m.nextMeeting){
-              txt+=`ㄴ${m.nextPurpose||m.purpose||'만남'}, "${fmtDateShort(m.nextMeeting)}"\n`;
-            } else if(m.resultStatus&&m.resultStatus.includes('탈락')){
-              txt+=`ㄴ${m.resultStatus}\n`;
-            }
+            txt+=`${emoji}${m.time||'시간미정'}/${m.cohort||'청년'}/${m.stage||''}/${m.method||''}/${m.people||''}\n`;
+            if(m.nextMeeting)txt+=`ㄴ${m.nextPurpose||m.purpose||'만남'}, "${fmtShort(m.nextMeeting)}"\n`;
+            else if(m.resultStatus&&m.resultStatus.includes('탈락'))txt+=`ㄴ${m.resultStatus}\n`;
           });
         });
       } else {
-        txt+=`➖\n`;
+        txt+=`➖ 만남 없음\n`;
       }
-      txt+=`➖➖➖➖➖➖➖➖➖➖➖\n`;
+      txt+='\n';
     });
 
   } else {
-    // 지역 요약 양식
-    txt+=`📊 ${termLabel} ${cohortLabel} 만남 현황 요약\n`;
-    txt+=`기간: ${start||'전체'} ~ ${end||'전체'}\n\n`;
-
-    const regions=region?[region]:(regionList.length?regionList:[...new Set(list.map(m=>m.region).filter(Boolean))]);
-    regions.forEach(r=>{
-      const rl=list.filter(m=>m.region===r);
-      if(!rl.length)return;
-      const st=countStats(rl);
-      txt+=`#${r}\n`;
-      txt+=`■ 총 ${st.total}건 | 향상 ${st.up} 완료 ${st.done} 미확 ${st.un} 탈락 ${st.afterDp+st.beforeDp}\n\n`;
+    // ── 만남캘린더 일별 양식 (기존) ──
+    let list=db.meetings.filter(m=>{
+      if(term&&m.term!==term)return false;
+      if(type&&m.cohort!==type)return false;
+      if(region&&m.region!==region)return false;
+      if(start&&m.date<start)return false;
+      if(end&&m.date>end)return false;
+      return true;
     });
 
-    const total=countStats(list);
-    txt+=`─────────────────\n`;
-    txt+=`■ 청년회 합계 ${total.total}건\n`;
-    txt+=`🎉${total.up} ✔️${total.done} 🟢${total.ok} 🟡${total.pt} 🔴${total.un} 🔺${total.delay} 🚫${total.afterDp} ❌${total.beforeDp}\n`;
+    const dates=[];
+    if(start&&end){
+      const cur=new Date(start),endD=new Date(end);
+      while(cur<=endD){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+    } else {
+      dates.push(...[...new Set(list.map(m=>m.date).filter(Boolean))].sort());
+    }
+
+    txt+=`⏰${todayFmt} | ${termLabel} ${type||''} #${regionLabel}지역 만남캘린더\n\n`;
+    txt+=`-상태 기준표\n🟢확티 🟡전티완료 🔴미확티\n🎉단계 향상 ✔️만남완료(단향X)\n🔺만남 연기 ❌만남 전 탈락 🚫만남 후 탈락\n\nEX)\n🟢시간/개강/단계/섭외방식/섭-인-교\nㄴ다음만남날짜 or 탈락사유\n➖➖➖➖➖➖➖➖➖➖➖\n`;
+
+    dates.forEach(date=>{
+      const dl=list.filter(m=>m.date===date);
+      const st=countStats(dl);
+      txt+=`📅 ${fmtDateKo(date)}\n■ 총만남 ${String(st.total).padStart(2,'0')}건\n`;
+      txt+=`🎉${String(st.up).padStart(2,'0')} ✔️${String(st.done).padStart(2,'0')} 🟢${String(st.ok).padStart(2,'0')} 🟡${String(st.pt).padStart(2,'0')}\n`;
+      txt+=`🔴${String(st.un).padStart(2,'0')} 🔺${String(st.delay).padStart(2,'0')} 🚫${String(st.afterDp).padStart(2,'0')} ❌${String(st.beforeDp).padStart(2,'0')}\n\n`;
+      if(dl.length){
+        const byP={};
+        dl.forEach(m=>{const p=m.purpose||'기타';if(!byP[p])byP[p]=[];byP[p].push(m);});
+        Object.entries(byP).forEach(([purpose,items])=>{
+          txt+=`➖${purpose} ${String(items.length).padStart(2,'0')}\n`;
+          items.forEach(m=>{
+            txt+=`${cfEmoji(m)}${m.time||'시간미정'}/${m.cohort||'청년'}/${m.stage||''}/${m.method||''}/${m.people||''}\n`;
+            if(m.nextMeeting)txt+=`ㄴ${m.nextPurpose||m.purpose||'만남'}, "${fmtShort(m.nextMeeting)}"\n`;
+            else if(m.resultStatus&&m.resultStatus.includes('탈락'))txt+=`ㄴ${m.resultStatus}\n`;
+          });
+        });
+      } else {txt+=`➖\n`;}
+      txt+=`➖➖➖➖➖➖➖➖➖➖➖\n`;
+    });
   }
 
   generatedText=txt;
-
-  // 표시
   document.getElementById('resultCard').style.display='block';
   document.getElementById('resultPre').textContent=txt;
-  const label=region?`${regionLabel} ${termLabel}`:termLabel;
-  document.getElementById('resultTitle').textContent=`${label} 양식 (${dates.length}일)`;
+  document.getElementById('resultTitle').textContent=
+    format==='holding'?`${regionLabel} ${termLabel} 보유현황`:
+    format==='3days'?`3일 만남현황`:
+    `${regionLabel} ${termLabel} 만남캘린더`;
   document.getElementById('resultCard').scrollIntoView({behavior:'smooth'});
 
   btn.textContent='✨ 양식 생성';
   btn.disabled=false;
 }
 
-function copyText(){
-  navigator.clipboard.writeText(generatedText).then(()=>showToast('📋 복사됐어요!'));
-}
+function copyText(){navigator.clipboard.writeText(generatedText).then(()=>showToast('📋 복사됐어요!'));}
 function downloadTxt(){
   const blob=new Blob([generatedText],{type:'text/plain;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download=`만남양식_${new Date().toISOString().slice(0,10)}.txt`;
+  a.download=`양식_${new Date().toISOString().slice(0,10)}.txt`;
   a.click();
-  showToast('⬇ 다운로드됐어요!');
+  showToast('⬇ 저장됐어요!');
 }
-
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
 init();
