@@ -148,9 +148,11 @@ body{font-family:'GangwonEduTt','Noto Sans KR',sans-serif;background:var(--bg);c
 <!-- HEADER -->
 <div class="hdr">
   <span class="hdr-logo">• 만남 캘린더</span>
+  <a href="app.html" class="hdr-btn hdr-acc" style="text-decoration:none;font-size:11px">📅 만캘</a>
+  <a href="livedata.html" class="hdr-btn" style="text-decoration:none;font-size:11px">📊 보유</a>
+  <a href="report.html" class="hdr-btn" style="text-decoration:none;font-size:11px">📄 보고</a>
   <button class="hdr-btn" onclick="loadData()" id="refreshBtn">↺</button>
-  <a href="admin.html" class="hdr-btn" style="text-decoration:none">관리자</a>
-  <button class="hdr-btn" onclick="doLogout()">로그아웃</button>
+  <button class="hdr-btn" onclick="doLogout()">나가기</button>
   <button class="hdr-btn hdr-acc" onclick="openAddModal()">+ 추가</button>
 </div>
 
@@ -201,6 +203,7 @@ body{font-family:'GangwonEduTt','Noto Sans KR',sans-serif;background:var(--bg);c
   <!-- 오늘 탭 -->
   <div class="tab-content active" id="tab-today">
     <div class="stats-row" id="stats-today"></div>
+    <div id="region-stage-today"></div>
     <div id="list-today"></div>
   </div>
 
@@ -446,6 +449,48 @@ function renderDayTab(tabId,dateStr){
     <div class="stat"><span class="stat-v green">${todayFlag?up:okCf}</span><span class="stat-l">${todayFlag?'단계향상':'확티'}</span></div>
     <div class="stat"><span class="stat-v yellow">${todayFlag?okCf:fbDone}</span><span class="stat-l">${todayFlag?'확티':'피드백완료'}</span></div>
   `;
+
+  // 오늘 탭에만 지역별 단계 표 표시
+  if(todayFlag){
+    const rsEl=document.getElementById('region-stage-today');
+    if(rsEl&&list.length){
+      const regions=[...new Set(list.map(m=>m.region).filter(Boolean))];
+      // regionList 순서 기준
+      const orderedR=regionList.length?regionList.filter(r=>regions.includes(r)).concat(regions.filter(r=>!regionList.includes(r))):regions;
+      const stages=['CH','H','D1','D2','B','CT'];
+      const stageColors={CH:'#0ea5e9',H:'#8b5cf6',D1:'#f59e0b',D2:'#f97316',B:'#10b981',CT:'#6366f1'};
+      let tableHtml=`<div style="overflow-x:auto;background:var(--white);border-bottom:1px solid var(--bd)">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:'DM Mono',monospace">
+          <thead>
+            <tr style="background:var(--s2)">
+              <th style="padding:5px 10px;text-align:left;font-size:10px;color:var(--t3);border-bottom:1px solid var(--bd);white-space:nowrap">지역</th>
+              ${stages.map(s=>`<th style="padding:5px 8px;text-align:center;font-size:10px;color:${stageColors[s]};border-bottom:1px solid var(--bd)">${s}</th>`).join('')}
+              <th style="padding:5px 8px;text-align:center;font-size:10px;color:var(--t2);border-bottom:1px solid var(--bd)">합계</th>
+            </tr>
+          </thead>
+          <tbody>`;
+      const totals={};stages.forEach(s=>totals[s]=0);let grandTotal=0;
+      orderedR.forEach(r=>{
+        const rl=list.filter(m=>m.region===r);
+        const cnt={};stages.forEach(s=>cnt[s]=0);
+        rl.forEach(m=>{const c=stageCode(m.stage);if(cnt[c]!==undefined)cnt[c]++;});
+        stages.forEach(s=>totals[s]+=cnt[s]);grandTotal+=rl.length;
+        tableHtml+=`<tr style="border-bottom:1px solid var(--bd)">
+          <td style="padding:5px 10px;font-weight:700;font-family:'GangwonEduTt',sans-serif;white-space:nowrap;font-size:11px">${r}</td>
+          ${stages.map(s=>`<td style="padding:5px 8px;text-align:center;color:${cnt[s]?stageColors[s]:'var(--t3)'};">${cnt[s]||'—'}</td>`).join('')}
+          <td style="padding:5px 8px;text-align:center;font-weight:700;color:var(--t2)">${rl.length}</td>
+        </tr>`;
+      });
+      // 합계 행
+      tableHtml+=`<tr style="background:var(--acc-lt)">
+        <td style="padding:5px 10px;font-weight:700;font-family:'GangwonEduTt',sans-serif;font-size:11px">합계</td>
+        ${stages.map(s=>`<td style="padding:5px 8px;text-align:center;font-weight:700;color:${stageColors[s]}">${totals[s]||'—'}</td>`).join('')}
+        <td style="padding:5px 8px;text-align:center;font-weight:700;color:var(--acc-dk)">${grandTotal}</td>
+      </tr>`;
+      tableHtml+=`</tbody></table></div>`;
+      rsEl.innerHTML=tableHtml;
+    } else if(rsEl){rsEl.innerHTML='';}
+  }
 
   if(!list.length){
     document.getElementById('list-'+tabId).innerHTML=`<div class="empty"><div class="empty-icon">${todayFlag?'☀️':'🔔'}</div><p>${todayFlag?'오늘 예정된 만남이 없어요':'내일 예정된 만남이 없어요'}</p></div>`;
