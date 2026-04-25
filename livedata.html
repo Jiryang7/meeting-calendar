@@ -319,8 +319,8 @@ function renderStageTable(){
       <td style="background:#eef6ff"><span class="goal-cell" onclick="editGoal('${r}','D2',this)">${gD2||'—'}</span></td>
       <td style="background:#eef6ff"><span class="goal-cell" onclick="editGoal('${r}','D1',this)">${gD1||'—'}</span></td>
       <td style="background:#eef6ff"><span class="goal-cell" onclick="editGoal('${r}','H',this)">${gH||'—'}</span></td>
-      ${STAGES.map(s=>`<td style="color:${sc[s]}">${c[s]||0}</td>`).join('')}
-      <td style="color:var(--acc-dk);font-weight:700">${c.total}</td>
+      ${STAGES.map(s=>`<td style="color:var(--t1)">${c[s]||0}</td>`).join('')}
+      <td style="background:var(--acc-lt);color:var(--acc-dk);font-weight:700">${c.total}</td>
       ${(()=>{const rv=[rateCell(cH_up,gH),rateCell(cD1_up,gD1),rateCell(cD2_up,gD2)];return rv.map(r=>{if(r==='')return'<td style="color:var(--t3);font-size:16px">—</td>';const s=rateCellStyle(r);return`<td style="background:${s.bg};color:${s.color};font-weight:700;font-size:16px">${r}%</td>`;}).join('');})()}
     </tr>`;
   });
@@ -336,7 +336,7 @@ function renderStageTable(){
     <td>${totGD2||'—'}</td>
     <td>${totGD1||'—'}</td>
     <td>${totGH||'—'}</td>
-    ${STAGES.map(s=>`<td>${tot[s]||0}</td>`).join('')}
+    ${STAGES.map(s=>`<td style="color:var(--t1)">${tot[s]||0}</td>`).join('')}
     <td>${tot.total}</td>
     ${(()=>{const rv=[rateCell(tH_up,totGH),rateCell(tD1_up,totGD1),rateCell(tD2_up,totGD2)];return rv.map(r=>{if(r==='')return'<td style="color:var(--t3);font-size:16px">—</td>';const s=rateCellStyle(r);return`<td style="background:${s.bg};color:${s.color};font-weight:700;font-size:16px">${r}%</td>`;}).join('');})()}
   </tr>`);
