@@ -90,8 +90,8 @@ pre{font-family:'DM Mono',monospace;font-size:11.5px;line-height:1.9;white-space
       <div class="field">
         <label>표시 형식</label>
         <select id="fFormat">
-          <option value="daily">만남캘린더 (일별)</option>
-          <option value="3days">3일 만남현황 (오늘~모레)</option>
+          <option value="daily">만남 결과 보고 (일별)</option>
+          <option value="3days">3일 만남현황 (보유 기준)</option>
           <option value="holding">보유데이터 현황</option>
         </select>
       </div>
@@ -303,39 +303,39 @@ async function generate(){
     });
 
   } else if(format==='3days'){
-    // ── 3일 만남현황 ──
-    const dates=[addDays(0),addDays(1),addDays(2)];
-    const dayNames=['오늘','내일','모레'];
+    // ── 3일 만남현황 (보유 데이터 기준) ──
+    const hour=new Date().getHours();
+    const offset=hour>=23?1:0;
+    const dates=[addDays(offset),addDays(offset+1),addDays(offset+2)];
+    const dayNames=offset?['내일','모레','내일모레']:['오늘','내일','모레'];
 
-    let list=db.meetings.filter(m=>{
-      if(term&&m.term!==term)return false;
-      if(type&&m.cohort!==type)return false;
-      if(region&&m.region!==region)return false;
+    const filteredPeople=ldPeople.filter(p=>{
+      if(term&&p.term!==term)return false;
+      if(type&&p.cohort!==type)return false;
+      if(region&&p.region!==region)return false;
       return true;
     });
 
-    txt+=`📅 3일 만남현황 | ${termLabel} ${typeLabel} ${region?'#'+region:''}\n`;
+    txt+=`📅 3일 만남현황 (보유 기준) | ${termLabel} ${typeLabel} ${region?'#'+region:''}\n`;
     txt+=`기준: ${fmtDateKo(dates[0])} ~ ${fmtDateKo(dates[2])}\n\n`;
 
     dates.forEach((d,i)=>{
-      const dl=list.filter(m=>m.date===d);
-      const st=countStats(dl);
+      const dl=filteredPeople.filter(p=>p.nextDate===d);
       txt+=`━━━━━━━━━━━━━━━━━\n`;
       txt+=`${dayNames[i]} | ${fmtDateKo(d)}\n`;
-      txt+=`■ 총만남 ${String(st.total).padStart(2,'0')}건\n`;
-      txt+=`🎉${String(st.up).padStart(2,'0')} ✔️${String(st.done).padStart(2,'0')} 🟢${String(st.ok).padStart(2,'0')} 🟡${String(st.pt).padStart(2,'0')}\n`;
-      txt+=`🔴${String(st.un).padStart(2,'0')} 🔺${String(st.delay).padStart(2,'0')} 🚫${String(st.afterDp).padStart(2,'0')} ❌${String(st.beforeDp).padStart(2,'0')}\n\n`;
+      txt+=`■ 총만남 ${String(dl.length).padStart(2,'0')}건\n\n`;
 
       if(dl.length){
         const byPurpose={};
-        dl.forEach(m=>{const p=m.purpose||'기타';if(!byPurpose[p])byPurpose[p]=[];byPurpose[p].push(m);});
+        dl.forEach(p=>{const pu=p.purpose||'기타';if(!byPurpose[pu])byPurpose[pu]=[];byPurpose[pu].push(p);});
         Object.entries(byPurpose).forEach(([purpose,items])=>{
           txt+=`➖${purpose} ${String(items.length).padStart(2,'0')}\n`;
-          items.forEach(m=>{
-            const emoji=cfEmoji(m);
-            txt+=`${emoji}${m.time||'시간미정'}/${m.cohort||'청년'}/${m.stage||''}/${m.method||''}/${m.people||''}\n`;
-            if(m.nextMeeting)txt+=`ㄴ${m.nextPurpose||m.purpose||'만남'}, "${fmtShort(m.nextMeeting)}"\n`;
-            else if(m.resultStatus&&m.resultStatus.includes('탈락'))txt+=`ㄴ${m.resultStatus}\n`;
+          items.forEach(p=>{
+            const stage=stageCode(p.stage)||'';
+            const team=p.team||'';
+            const method=p.method||'노방';
+            const people=p.people||'';
+            txt+=`${stage}/${p.cohort||'청년'}/${team}/${method}/${people}\n`;
           });
         });
       } else {
@@ -393,8 +393,8 @@ async function generate(){
   document.getElementById('resultPre').textContent=txt;
   document.getElementById('resultTitle').textContent=
     format==='holding'?`${regionLabel} ${termLabel} 보유현황`:
-    format==='3days'?`3일 만남현황`:
-    `${regionLabel} ${termLabel} 만남캘린더`;
+    format==='3days'?`${termLabel} ${typeLabel} 3일 만남현황 (보유 기준)`:
+    `${regionLabel} ${termLabel} 만남 결과 보고`;
   document.getElementById('resultCard').scrollIntoView({behavior:'smooth'});
 
   btn.textContent='✨ 양식 생성';
