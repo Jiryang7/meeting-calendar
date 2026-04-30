@@ -535,35 +535,28 @@ async function sendToTelegram(){
       const sectionCanvas=await html2canvas(section,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
       images.push(sectionCanvas.toDataURL('image/png'));
     }
-    // base64 → File 변환
-    function base64ToFile(base64, filename) {
-      const arr = base64.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]);
-      let n = bstr.length, u8arr = new Uint8Array(n);
-      while(n--){u8arr[n]=bstr.charCodeAt(n);}
-      return new File([u8arr], filename, {type:mime});
+    // 텍스트 캡션
+    const caption = `📊 보유데이터 현황 2026-04-30 15:26  📈 단계별 보유현황 (5월/청년)  📌 총 인원: ${totRow.total}명`;
+    // 첫 번째 이미지만 텍스트와 함께 전송, 나머지는 순서대로
+    showToast('텔레그램 전송 중...');
+    for(let i=0;i<images.length;i++){
+      const base64Data=images[i].split(',')[1];
+      const byteCharacters=atob(base64Data);
+      const byteNumbers=new Array(byteCharacters.length);
+      for(let j=0;j<byteCharacters.length;j++){byteNumbers[j]=byteCharacters.charCodeAt(j);}
+      const byteArray=new Uint8Array(byteNumbers);
+      const blob=new Blob([byteArray],{type:'image/png'});
+      const file=new File([blob],`image${i}.png`,{type:'image/png'});
+      const formData=new FormData();
+      formData.append('photo',file);
+      formData.append('chat_id',TG_CHAT_ID);
+      formData.append('caption',i===0?caption:'');
+      const resp=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`,{method:'POST',body:formData});
+      const result=await resp.json();
+      if(!result.ok){console.error('Image',i,'error:',result);}
+      showToast(`전송 중... (${i+1}/${images.length})`);
     }
-    const files = images.map((img, i) => base64ToFile(img, `img${i}.png`));
-    // 텔레그램 앨범 전송
-    const media = files.map((file, i) => ({
-      type: 'photo',
-      media: `attach://file${i}`,
-      caption: i === 0 ? `📊 보유데이터 현황 2026-04-30 15:26  📈 단계별 보유현황 (5월/청년)  📌 총 인원: 102명 ■찾기 : 35명  오늘 1 | 내일 11 | 모레 5  이후 7 | 미정 11  ■합자 : 41명  오늘 5 | 내일 8 | 모레 8  이후 4 | 미정 16  ■육따 : 13명  오늘 2 | 내일 6 | 모레 1  이후 1 | 미정 3  ■영따 : 12명  오늘 2 | 내일 5 | 모레 2 |  이후 1 | 미정 2  ■복음방 : 1명  오늘 0 | 내일 0 | 모레 0  이후 0 | 미정 1` : undefined
-    }));
-    const formData = new FormData();
-    formData.append('chat_id', TG_CHAT_ID);
-    formData.append('media', JSON.stringify(media));
-    files.forEach((file, i) => formData.append(`file${i}`, file));
-    showToast('텔레그램 앨범 전송 중...');
-    const resp = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMediaGroup`, {
-      method: 'POST',
-      body: formData
-    });
-    const result = await resp.json();
-    if(result.ok){
-      showToast('✓ 텔레그램으로 앨범 전송 완료!');
-    }else{
-      showToast('✗ 앨범 전송 실패: '+result.description);
-    }
+    showToast('✓ 텔레그램으로 전송 완료!');
   }catch(e){
     showToast('✗ 전송 오류: '+e.message);
     console.error(e);
