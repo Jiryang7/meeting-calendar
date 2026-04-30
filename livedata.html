@@ -481,7 +481,7 @@ const TG_BOT_TOKEN='8767216429:AAHKpo0TRUNqCLsYkuYTBV1SAl_87K5RHVw';
 const TG_CHAT_ID='119068613';
 
 async function uploadToImgbb(base64Img){
-  // base64에서 데이터 부분만 추출
+  // base64에서 Blob 생성
   const base64Data=base64Img.split(',')[1];
   const byteCharacters=atob(base64Data);
   const byteNumbers=new Array(byteCharacters.length);
@@ -489,17 +489,20 @@ async function uploadToImgbb(base64Img){
   const byteArray=new Uint8Array(byteNumbers);
   const blob=new Blob([byteArray],{type:'image/png'});
   
-  // tmpfiles.org에 업로드
+  // 텔레그램에 직접 이미지 전송 (Blob을 File로)
+  const file=new File([blob],'image.png',{type:'image/png'});
   const formData=new FormData();
-  formData.append('file',blob,'image.png');
+  formData.append('photo',file);
+  formData.append('chat_id',TG_CHAT_ID);
+  formData.append('caption','📊 보유데이터');
   
-  const response=await fetch('https://tmpfiles.org/api/v1/upload',{
+  const response=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`,{
     method:'POST',
     body:formData
   });
   const result=await response.json();
-  if(result.success) return result.data.url;
-  throw new Error(result.message || 'upload failed');
+  if(result.ok) return 'direct';
+  throw new Error(result.description);
 }
 
 async function sendToTelegram(){
@@ -546,50 +549,17 @@ async function sendToTelegram(){
     const meetCanvas=await html2canvas(meetEl,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
     const meetImg=meetCanvas.toDataURL('image/png');
     
-    showToast('이미지 업로드 중... (1/2)');
+    showToast('텔레그램 전송 중... (1/2)');
     
-    // imgbb에 이미지 업로드 후 URL获取
-    const stageUrl=await uploadToImgbb(stageImg);
+    // 첫 번째 이미지 전송 (단계별 보유현황) - 직접 텔레그램에
+    await uploadToImgbb(stageImg);
     
-    showToast('이미지 업로드 중... (2/2)');
-    const meetUrl=await uploadToImgbb(meetImg);
+    showToast('텔레그램 전송 중... (2/2)');
     
-    showToast('텔레그램 전송 중...');
+    // 두 번째 이미지 전송 (만남 현황) - 직접 텔레그램에
+    await uploadToImgbb(meetImg);
     
-    // 첫 번째 이미지 전송 (단계별 보유현황)
-    const resp1=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        chat_id:TG_CHAT_ID,
-        photo:stageUrl,
-        caption:caption
-      })
-    });
-    
-    const result1=await resp1.json();
-    if(!result1.ok){
-      showToast('✗ 전송 실패: '+result1.description);
-      return;
-    }
-    
-    // 두 번째 이미지 전송 (만남 현황)
-    const resp2=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        chat_id:TG_CHAT_ID,
-        photo:meetUrl,
-        caption:'📅 만남 현황 (3일 내)'
-      })
-    });
-    
-    const result2=await resp2.json();
-    if(result2.ok){
-      showToast('✓ 텔레그램으로 이미지 전송 완료!');
-    }else{
-      showToast('✗ 두 번째 이미지 전송 실패: '+result2.description);
-    }
+    showToast('✓ 텔레그램으로 이미지 전송 완료!');
   }catch(e){
     showToast('✗ 전송 오류: '+e.message);
     console.error(e);
