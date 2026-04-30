@@ -507,7 +507,7 @@ async function uploadToImgbb(base64Img){
 }
 
 async function sendToTelegram(){
-  showToast('이미지 캡처 중...');
+  showToast('이미지 준비 중...');
   
   const people=getFilteredPeople();
   const regions=getOrderedRegions(people);
@@ -518,49 +518,38 @@ async function sendToTelegram(){
   regions.forEach(r=>{countMap[r]={total:0};STAGES.forEach(s=>countMap[r][s]=0);});
   people.forEach(p=>{if(!p.region||!countMap[p.region])return;countMap[p.region][p.stage]=(countMap[p.region][p.stage]||0)+1;countMap[p.region].total++;totRow[p.stage]=(totRow[p.stage]||0)+1;totRow.total++;});
   
-  // 2. 만남 현황 데이터 구성
+  // 2. 만남 현황 - 모든 단계 펼치기
   const tod=today(),d1=addDays(tod,1),d2=addDays(tod,2);
-  const meetCounts={};
-  STAGES.forEach(s=>meetCounts[s]={today:0,d1:0,d2:0,after:0,none:0});
-  people.forEach(p=>{
-    const stage=p.stage;
-    if(!meetCounts[stage])return;
-    const nd=p.nextDate;
-    if(!nd||nd<tod)meetCounts[stage].none++;
-    else if(nd===tod)meetCounts[stage].today++;
-    else if(nd===d1)meetCounts[stage].d1++;
-    else if(nd===d2)meetCounts[stage].d2++;
-    else meetCounts[stage].after++;
+  document.querySelectorAll('.stage-meet-hdr').forEach(hdr=>{
+    const body=hdr.nextElementSibling;
+    body.style.display='';
+    hdr.querySelector('.stage-meet-tog').textContent='▲';
   });
   
-  // 텔레그램 메시지 구성
-  const now=new Date().toISOString().slice(0,16).replace('T',' ');
-  let caption=`📊 보유데이터 전송\n${now} | ${filterTerm}/${filterType}\n`;
-  caption+=`총 인원: ${totRow.total}명\n`;
-  caption+=`📈 단계별 보유현황 + 📅 만남 현황`;
-  
   try{
-    // 단계별 테이블 캡처
+    // 1. 단계별 테이블 캡처 후 전송
     const stageEl=document.querySelector('#stageSection .table-wrap');
     const stageCanvas=await html2canvas(stageEl,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
     const stageImg=stageCanvas.toDataURL('image/png');
     
-    // 만남 현황 캡처
-    const meetEl=document.getElementById('meetWrap');
-    const meetCanvas=await html2canvas(meetEl,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
-    const meetImg=meetCanvas.toDataURL('image/png');
-    
-    showToast('텔레그램 전송 중... (1/2)');
-    
-    // 첫 번째 이미지 전송 (단계별 보유현황) - 직접 텔레그램에
+    showToast('📈 보유현황 전송 중...');
     await uploadToImgbb(stageImg);
     
-    showToast('텔레그램 전송 중... (2/2)');
+    // 2. 만남 현황 - 각 단계별로 따로 전송
+    const meetEl=document.getElementById('meetWrap');
+    const meetSections=meetEl.querySelectorAll('.meet-section');
     
-    // 두 번째 이미지 전송 (만남 현황) - 직접 텔레그램에
-    await uploadToImgbb(meetImg);
+    for(let i=0;i<meetSections.length;i++){
+      const section=meetSections[i];
+      const stageTitle=section.querySelector('.stage-meet-title').textContent;
+      showToast(`📅 ${stageTitle} 전송 중... (${i+1}/${meetSections.length})`);
+      
+      const sectionCanvas=await html2canvas(section,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+      const sectionImg=sectionCanvas.toDataURL('image/png');
+      await uploadToImgbb(sectionImg);
+    }
     
-    showToast('✓ 텔레그램으로 이미지 전송 완료!');
+    showToast('✓ 텔레그램으로 전송 완료!');
   }catch(e){
     showToast('✗ 전송 오류: '+e.message);
     console.error(e);
