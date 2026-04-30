@@ -481,7 +481,7 @@ const TG_BOT_TOKEN='8767216429:AAHKpo0TRUNqCLsYkuYTBV1SAl_87K5RHVw';
 const TG_CHAT_ID='119068613';
 
 async function sendToTelegram(){
-  showToast('텔레그램 전송 준비 중...');
+  showToast('이미지 캡처 중...');
   
   const people=getFilteredPeople();
   const regions=getOrderedRegions(people);
@@ -509,56 +509,56 @@ async function sendToTelegram(){
   
   // 텔레그램 메시지 구성
   const now=new Date().toISOString().slice(0,16).replace('T',' ');
-  let msg=`📊 보유데이터 전송\n${now}\n\n`;
+  let caption=`📊 보유데이터 전송\n${now} | ${filterTerm}/${filterType}\n`;
+  caption+=`총 인원: ${totRow.total}명\n`;
+  caption+=`📈 단계별 보유현황 + 📅 만남 현황`;
   
-  // 단계별 보유현황
-  msg+=`📈 단계별 보유현황 (${filterTerm}/${filterType})\n`;
-  msg+=`━━━━━━━━━━━━━━━━━━━━\n`;
-  msg+=`지역\tCH\tH\tD1\tD2\tB\tCT\t합계\n`;
-  msg+=`─────────────────────────────────\n`;
-  
-  regions.forEach(r=>{
-    const c=countMap[r];
-    msg+=`${r}\t${c.CH||0}\t${c.H||0}\t${c.D1||0}\t${c.D2||0}\t${c.B||0}\t${c.CT||0}\t${c.total}\n`;
-  });
-  
-  msg+=`─────────────────────────────────\n`;
-  msg+=`청년회\t${totRow.CH||0}\t${totRow.H||0}\t${totRow.D1||0}\t${totRow.D2||0}\t${totRow.B||0}\t${totRow.CT||0}\t${totRow.total}\n`;
-  msg+=`\n`;
-  
-  // 만남 현황
-  msg+=`📅 만남 현황 (3일 내)\n`;
-  msg+=`━━━━━━━━━━━━━━━━━━━━\n`;
-  
-  STAGES.forEach(stage=>{
-    const sp=people.filter(p=>p.stage===stage);
-    if(!sp.length)return;
-    const mc=meetCounts[stage];
-    const near3=(mc.today||0)+(mc.d1||0)+(mc.d2||0);
-    msg+=`${stage} (${STAGE_LABELS[stage]}): ${sp.length}명 | 오늘 ${mc.today||0} | 내일 ${mc.d1||0} | 모레 ${mc.d2||0} | 이후 ${mc.after||0} | 미정 ${mc.none||0}\n`;
-  });
-  
-  msg+=`\n📌 총 인원: ${totRow.total}명`;
-  
-  // 텔레그램으로 전송
   try{
+    // 단계별 테이블 캡처
+    const stageEl=document.querySelector('#stageSection .table-wrap');
+    const stageCanvas=await html2canvas(stageEl,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    const stageImg=stageCanvas.toDataURL('image/png');
+    
+    // 만남 현황 캡처
+    const meetEl=document.getElementById('meetWrap');
+    const meetCanvas=await html2canvas(meetEl,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    const meetImg=meetCanvas.toDataURL('image/png');
+    
     showToast('텔레그램 전송 중...');
-    const response=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`,{
+    
+    // 첫 번째 이미지 전송 (단계별 보유현황)
+    const resp1=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         chat_id:TG_CHAT_ID,
-        text:msg,
-        parse_mode:'Markdown'
+        photo:stageImg,
+        caption:caption
       })
     });
     
-    const result=await response.json();
-    if(result.ok){
-      showToast('✓ 텔레그램으로 전송 완료!');
+    const result1=await resp1.json();
+    if(!result1.ok){
+      showToast('✗ 전송 실패: '+result1.description);
+      return;
+    }
+    
+    // 두 번째 이미지 전송 (만남 현황)
+    const resp2=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        chat_id:TG_CHAT_ID,
+        photo:meetImg,
+        caption:'📅 만남 현황 (3일 내)'
+      })
+    });
+    
+    const result2=await resp2.json();
+    if(result2.ok){
+      showToast('✓ 텔레그램으로 이미지 전송 완료!');
     }else{
-      showToast('✗ 전송 실패: '+result.description);
-      console.error('Telegram error:',result);
+      showToast('✗ 두 번째 이미지 전송 실패: '+result2.description);
     }
   }catch(e){
     showToast('✗ 전송 오류: '+e.message);
