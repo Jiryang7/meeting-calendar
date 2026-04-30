@@ -515,7 +515,41 @@ async function sendToTelegram(){
   STAGES.forEach(s=>totRow[s]=0);
   regions.forEach(r=>{countMap[r]={total:0};STAGES.forEach(s=>countMap[r][s]=0);});
   people.forEach(p=>{if(!p.region||!countMap[p.region])return;countMap[p.region][p.stage]=(countMap[p.region][p.stage]||0)+1;countMap[p.region].total++;totRow[p.stage]=(totRow[p.stage]||0)+1;totRow.total++;});
-  // 2. 만남 현황 - 모든 단계 펼치기
+  // 2. 만남 현황 데이터 구성
+  const tod=today(),d1=addDays(tod,1),d2=addDays(tod,2);
+  const meetCounts={};
+  STAGES.forEach(s=>meetCounts[s]={today:0,d1:0,d2:0,after:0,none:0});
+  people.forEach(p=>{
+    const stage=p.stage;
+    if(!meetCounts[stage])return;
+    const nd=p.nextDate;
+    if(!nd||nd<tod)meetCounts[stage].none++;
+    else if(nd===tod)meetCounts[stage].today++;
+    else if(nd===d1)meetCounts[stage].d1++;
+    else if(nd===d2)meetCounts[stage].d2++;
+    else meetCounts[stage].after++;
+  });
+  // 텍스트 캡션 구성
+  const now=new Date().toISOString().slice(0,16).replace('T',' ');
+  let caption=`📊 보유데이터 현황 ${now}\n\n`;
+  caption+=`📈 단계별 보유현황 (${filterTerm}/${filterType})\n`;
+  caption+=`📌 총 인원: ${totRow.total}명\n\n`;
+  caption+=`■찾기 : ${totRow.CH||0}명\n`;
+  caption+=`오늘 ${meetCounts.CH?.today||0} | 내일 ${meetCounts.CH?.d1||0} | 모레 ${meetCounts.CH?.d2||0}\n`;
+  caption+=`이후 ${meetCounts.CH?.after||0} | 미정 ${meetCounts.CH?.none||0}\n\n`;
+  caption+=`■합자 : ${totRow.H||0}명\n`;
+  caption+=`오늘 ${meetCounts.H?.today||0} | 내일 ${meetCounts.H?.d1||0} | 모레 ${meetCounts.H?.d2||0}\n`;
+  caption+=`이후 ${meetCounts.H?.after||0} | 미정 ${meetCounts.H?.none||0}\n\n`;
+  caption+=`■육따 : ${totRow.D1||0}명\n`;
+  caption+=`오늘 ${meetCounts.D1?.today||0} | 내일 ${meetCounts.D1?.d1||0} | 모레 ${meetCounts.D1?.d2||0}\n`;
+  caption+=`이후 ${meetCounts.D1?.after||0} | 미정 ${meetCounts.D1?.none||0}\n\n`;
+  caption+=`■영따 : ${totRow.D2||0}명\n`;
+  caption+=`오늘 ${meetCounts.D2?.today||0} | 내일 ${meetCounts.D2?.d1||0} | 모레 ${meetCounts.D2?.d2||0}\n`;
+  caption+=`이후 ${meetCounts.D2?.after||0} | 미정 ${meetCounts.D2?.none||0}\n\n`;
+  caption+=`■복음방 : ${totRow.B||0}명\n`;
+  caption+=`오늘 ${meetCounts.B?.today||0} | 내일 ${meetCounts.B?.d1||0} | 모레 ${meetCounts.B?.d2||0}\n`;
+  caption+=`이후 ${meetCounts.B?.after||0} | 미정 ${meetCounts.B?.none||0}`;
+  // 3. 만남 현황 - 모든 단계 펼치기
   document.querySelectorAll('.stage-meet-hdr').forEach(hdr=>{
     const body=hdr.nextElementSibling;
     body.style.display='';
@@ -535,8 +569,6 @@ async function sendToTelegram(){
       const sectionCanvas=await html2canvas(section,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
       images.push(sectionCanvas.toDataURL('image/png'));
     }
-    // 텍스트 캡션
-    const caption = `📊 보유데이터 현황 2026-04-30 15:26  📈 단계별 보유현황 (5월/청년)  📌 총 인원: ${totRow.total}명`;
     // 첫 번째 이미지만 텍스트와 함께 전송, 나머지는 순서대로
     showToast('텔레그램 전송 중...');
     for(let i=0;i<images.length;i++){
