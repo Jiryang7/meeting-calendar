@@ -101,6 +101,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   </div>
   <div class="hdr-r">
     <button class="btn btn-sm" onclick="loadData()"><span id="syncIcon">↺</span> 새로고침</button>
+    <button class="btn btn-sm" onclick="sendToTelegram()" style="background:#229ED9;color:#fff;border-color:#229ED9">📤 텔레 전송</button>
     <a href="admin.html" class="btn btn-sm" style="text-decoration:none">관리자</a>
     <button class="btn btn-sm" onclick="doLogout()">로그아웃</button>
   </div>
@@ -474,6 +475,97 @@ function downloadSection(id, filename){
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// 텔레그램 전송 함수
+const TG_BOT_TOKEN='8767216429:AAHKpo0TRUNqCLsYkuYTBV1SAl_87K5RHVw';
+const TG_CHAT_ID='119068613';
+
+async function sendToTelegram(){
+  showToast('텔레그램 전송 준비 중...');
+  
+  const people=getFilteredPeople();
+  const regions=getOrderedRegions(people);
+  
+  // 1. 단계별 보유현황 데이터 구성
+  const countMap={},totRow={total:0};
+  STAGES.forEach(s=>totRow[s]=0);
+  regions.forEach(r=>{countMap[r]={total:0};STAGES.forEach(s=>countMap[r][s]=0);});
+  people.forEach(p=>{if(!p.region||!countMap[p.region])return;countMap[p.region][p.stage]=(countMap[p.region][p.stage]||0)+1;countMap[p.region].total++;totRow[p.stage]=(totRow[p.stage]||0)+1;totRow.total++;});
+  
+  // 2. 만남 현황 데이터 구성
+  const tod=today(),d1=addDays(tod,1),d2=addDays(tod,2);
+  const meetCounts={};
+  STAGES.forEach(s=>meetCounts[s]={today:0,d1:0,d2:0,after:0,none:0});
+  people.forEach(p=>{
+    const stage=p.stage;
+    if(!meetCounts[stage])return;
+    const nd=p.nextDate;
+    if(!nd||nd<tod)meetCounts[stage].none++;
+    else if(nd===tod)meetCounts[stage].today++;
+    else if(nd===d1)meetCounts[stage].d1++;
+    else if(nd===d2)meetCounts[stage].d2++;
+    else meetCounts[stage].after++;
+  });
+  
+  // 텔레그램 메시지 구성
+  const now=new Date().toISOString().slice(0,16).replace('T',' ');
+  let msg=`📊 보유데이터 전송\n${now}\n\n`;
+  
+  // 단계별 보유현황
+  msg+=`📈 단계별 보유현황 (${filterTerm}/${filterType})\n`;
+  msg+=`━━━━━━━━━━━━━━━━━━━━\n`;
+  msg+=`지역\tCH\tH\tD1\tD2\tB\tCT\t합계\n`;
+  msg+=`─────────────────────────────────\n`;
+  
+  regions.forEach(r=>{
+    const c=countMap[r];
+    msg+=`${r}\t${c.CH||0}\t${c.H||0}\t${c.D1||0}\t${c.D2||0}\t${c.B||0}\t${c.CT||0}\t${c.total}\n`;
+  });
+  
+  msg+=`─────────────────────────────────\n`;
+  msg+=`청년회\t${totRow.CH||0}\t${totRow.H||0}\t${totRow.D1||0}\t${totRow.D2||0}\t${totRow.B||0}\t${totRow.CT||0}\t${totRow.total}\n`;
+  msg+=`\n`;
+  
+  // 만남 현황
+  msg+=`📅 만남 현황 (3일 내)\n`;
+  msg+=`━━━━━━━━━━━━━━━━━━━━\n`;
+  
+  STAGES.forEach(stage=>{
+    const sp=people.filter(p=>p.stage===stage);
+    if(!sp.length)return;
+    const mc=meetCounts[stage];
+    const near3=(mc.today||0)+(mc.d1||0)+(mc.d2||0);
+    msg+=`${stage} (${STAGE_LABELS[stage]}): ${sp.length}명 | 오늘 ${mc.today||0} | 내일 ${mc.d1||0} | 모레 ${mc.d2||0} | 이후 ${mc.after||0} | 미정 ${mc.none||0}\n`;
+  });
+  
+  msg+=`\n📌 총 인원: ${totRow.total}명`;
+  
+  // 텔레그램으로 전송
+  try{
+    showToast('텔레그램 전송 중...');
+    const response=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        chat_id:TG_CHAT_ID,
+        text:msg,
+        parse_mode:'Markdown'
+      })
+    });
+    
+    const result=await response.json();
+    if(result.ok){
+      showToast('✓ 텔레그램으로 전송 완료!');
+    }else{
+      showToast('✗ 전송 실패: '+result.description);
+      console.error('Telegram error:',result);
+    }
+  }catch(e){
+    showToast('✗ 전송 오류: '+e.message);
+    console.error(e);
+  }
+}
+
 loadData();
 </script>
 </body>
