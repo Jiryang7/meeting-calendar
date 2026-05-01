@@ -569,26 +569,27 @@ async function sendToTelegram(){
       const sectionCanvas=await html2canvas(section,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
       images.push(sectionCanvas.toDataURL('image/png'));
     }
-    // 첫 번째 이미지만 텍스트와 함께 전송, 나머지는 순서대로
+    // 모든 이미지를 sendMediaGroup으로 한 번에 묶어서 전송
     showToast('텔레그램 전송 중...');
-    for(let i=0;i<images.length;i++){
-      const base64Data=images[i].split(',')[1];
+    const formData=new FormData();
+    formData.append('chat_id',TG_CHAT_ID);
+    const mediaArr=images.map((img,i)=>{
+      const base64Data=img.split(',')[1];
       const byteCharacters=atob(base64Data);
       const byteNumbers=new Array(byteCharacters.length);
       for(let j=0;j<byteCharacters.length;j++){byteNumbers[j]=byteCharacters.charCodeAt(j);}
       const byteArray=new Uint8Array(byteNumbers);
       const blob=new Blob([byteArray],{type:'image/png'});
-      const file=new File([blob],`image${i}.png`,{type:'image/png'});
-      const formData=new FormData();
-      formData.append('photo',file);
-      formData.append('chat_id',TG_CHAT_ID);
-      formData.append('caption',i===0?caption:'');
-      const resp=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`,{method:'POST',body:formData});
-      const result=await resp.json();
-      if(!result.ok){console.error('Image',i,'error:',result);}
-      showToast(`전송 중... (${i+1}/${images.length})`);
-    }
-    showToast('✓ 텔레그램으로 전송 완료!');
+      formData.append(`image${i}`,new File([blob],`image${i}.png`,{type:'image/png'}));
+      const item={type:'photo',media:`attach://image${i}`};
+      if(i===0)item.caption=caption;
+      return item;
+    });
+    formData.append('media',JSON.stringify(mediaArr));
+    const resp=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMediaGroup`,{method:'POST',body:formData});
+    const result=await resp.json();
+    if(!result.ok){console.error('sendMediaGroup error:',result);showToast('✗ 전송 오류: '+result.description);}
+    else{showToast('✓ 텔레그램으로 전송 완료!');}
   }catch(e){
     showToast('✗ 전송 오류: '+e.message);
     console.error(e);
