@@ -403,7 +403,15 @@ function renderMeetTables(){
       const cells=DATE_COLS.map(c=>{
         const list=buckets[c.key]||[];
         if(!list.length)return`<td><span class="empty-dash">—</span></td>`;
-        const chips=list.map(p=>`<span class="chip chip-${p.purpose}">${(p.people||'').split('-')[0]}/${p.purpose}</span>`).join('');
+        const chips=list.map(p=>{
+          const name=(p.people||'').split('-')[0];
+          if(c.key==='after'&&p.nextDate){
+            const dt=new Date(p.nextDate+'T00:00:00');
+            const dateStr=`${dt.getMonth()+1}/${dt.getDate()}(${['일','월','화','수','목','금','토'][dt.getDay()]})`;
+            return`<span class="chip chip-${p.purpose}">${name}/${p.purpose}/${dateStr}</span>`;
+          }
+          return`<span class="chip chip-${p.purpose}">${name}/${p.purpose}</span>`;
+        }).join('');
         return`<td><div class="chip-wrap">${chips}</div></td>`;
       }).join('');
       return`<tr><td class="region-td">${r}<div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rp.length}명</div></td>${cells}</tr>`;
