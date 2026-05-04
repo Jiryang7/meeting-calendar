@@ -200,19 +200,12 @@ async function doSignup(){
   if(pass.length<8){showErr('s-err','비밀번호는 8자 이상이어야 합니다');return;}
   if(pass!==pass2){showErr('s-err','비밀번호가 일치하지 않습니다');return;}
 
-  // 초대코드 검증 (Supabase에 저장된 해시와 비교)
   const btn=document.getElementById('signupBtn');
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>처리 중...';
 
   try{
-    // 초대코드 해시 확인
-    const inviteHash=await sha256('invite::'+invite);
-    const cfgResp=await fetch(`${SB_URL}/rest/v1/meetings?id=eq.00000000-0000-0000-0000-000000000001&select=data`,{headers:HDR});
-    const cfgRows=await cfgResp.json();
-    const cfg=cfgRows?.[0]?.data||{};
-
-    if(!cfg.inviteHash){showErr('s-err','초대 코드가 아직 설정되지 않았습니다. 관리자에게 문의하세요');return;}
-    if(cfg.inviteHash!==inviteHash){showErr('s-err','초대 코드가 올바르지 않습니다');return;}
+    // 초대코드 검증 (고정값)
+    if(invite!=='m43!'){showErr('s-err','초대 코드가 올바르지 않습니다');btn.disabled=false;btn.textContent='등록하기';return;}
 
     // 중복 이름 확인
     const dupResp=await fetch(`${SB_URL}/rest/v1/users?name=eq.${encodeURIComponent(name)}&select=id`,{headers:HDR});

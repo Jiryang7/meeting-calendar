@@ -308,6 +308,13 @@ async function loadAppData(){
       appData=rows[0].data;
       currentInvite=appData.inviteCode||'';
     }
+    if(!appData.inviteCode){
+      const hash=await sha256('invite::m43!');
+      appData.inviteCode='m43!';
+      appData.inviteHash=hash;
+      currentInvite='m43!';
+      await saveAppData();
+    }
     renderRegions();
     renderCohorts();
     renderStageOrder();
