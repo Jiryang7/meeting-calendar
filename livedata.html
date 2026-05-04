@@ -470,7 +470,11 @@ function renderMeetTables(){
         if(c.isToday){
           if(!list.length)return`<td style="background:#fffde7"><span class="empty-dash">—</span></td>`;
           const cls=c.purpose?normalizePurpose(c.purpose).cls:'기타';
-          const chips=list.map(p=>`<span class="chip chip-${cls}">${(p.people||'').split('-')[0]}</span>`).join('');
+          const isKita=c.purpose==='기타'||!c.purpose;
+          const chips=list.map(p=>{
+            const name=(p.people||'').split('-')[0];
+            return`<span class="chip chip-${cls}">${isKita?name+'/'+p.purpose:name}</span>`;
+          }).join('');
           return`<td style="background:#fffde7"><div class="chip-wrap">${chips}</div></td>`;
         }
         if(!list.length)return`<td><span class="empty-dash">—</span></td>`;
