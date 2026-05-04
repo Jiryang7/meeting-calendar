@@ -79,6 +79,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .chip-육따{background:#fef9c3;color:#854d0e;border-color:#fde047}
 .chip-복음{background:#dcfce7;color:#166534;border-color:#86efac}
 .chip-기타{background:var(--s2);color:var(--t2);border-color:var(--bd)}
+.today-groups{display:flex;flex-direction:column;gap:4px;text-align:left}
+.today-group{display:flex;flex-wrap:wrap;align-items:center;gap:3px}
 .empty-dash{color:var(--t3)}
 
 .spin{width:13px;height:13px;border:2px solid rgba(14,165,233,.2);border-top-color:var(--acc);border-radius:50%;animation:sp .65s linear infinite;display:inline-block;vertical-align:middle}
@@ -369,6 +371,19 @@ function editGoal(region,stage,el){
   showToast('목표는 🎯 목표 페이지에서 수정해주세요');
 }
 
+function normalizePurpose(raw){
+  const p=(raw||'').trim();
+  if(['상담','상담 예정','육상담'].includes(p))return{label:'상담',cls:'상담'};
+  if(['육따기','육따기 예정'].includes(p))return{label:'육따기',cls:'육따'};
+  if(p==='육따기 굳히기')return{label:'육따기 굳히기',cls:'육따'};
+  if(['영따기','영따기 예정'].includes(p))return{label:'영따기',cls:'영따'};
+  if(p==='전도의장')return{label:'전도의장',cls:'기타'};
+  if(p==='복음')return{label:'복음',cls:'복음'};
+  return{label:'기타',cls:'기타'};
+}
+const PURPOSE_ORDER=['상담','육따기','육따기 굳히기','영따기','전도의장','복음','기타'];
+const PURPOSE_CLR={'상담':'#6d28d9','영따':'#c2410c','육따':'#854d0e','복음':'#166534','기타':'var(--t2)'};
+
 function renderMeetTables(){
   const people=getFilteredPeople();
   const wrap=document.getElementById('meetWrap');
@@ -403,16 +418,29 @@ function renderMeetTables(){
       const cells=DATE_COLS.map(c=>{
         const list=buckets[c.key]||[];
         if(!list.length)return`<td><span class="empty-dash">—</span></td>`;
-        const chips=list.map(p=>{
+        const groups={};
+        list.forEach(p=>{
           const name=(p.people||'').split('-')[0];
+          const norm=normalizePurpose(p.purpose);
+          if(!groups[norm.label])groups[norm.label]={cls:norm.cls,items:[],isKita:norm.label==='기타'};
+          let display=name;
           if(c.key==='after'&&p.nextDate){
             const dt=new Date(p.nextDate+'T00:00:00');
-            const dateStr=`${dt.getMonth()+1}.${dt.getDate()}(${['일','월','화','수','목','금','토'][dt.getDay()]})`;
-            return`<span class="chip chip-${p.purpose}">${name}/${p.purpose}/${dateStr}</span>`;
+            display+=`/${dt.getMonth()+1}.${dt.getDate()}(${['일','월','화','수','목','금','토'][dt.getDay()]})`;
           }
-          return`<span class="chip chip-${p.purpose}">${name}/${p.purpose}</span>`;
+          groups[norm.label].items.push({name,display,rawPurpose:p.purpose});
+        });
+        const bgStyle=c.isToday?'background:#fffde7':'';
+        const groupHtml=PURPOSE_ORDER.filter(k=>groups[k]).map(k=>{
+          const g=groups[k];
+          const clr=PURPOSE_CLR[g.cls]||'var(--t2)';
+          const names=g.items.map(it=>g.isKita
+            ?`<span class="chip chip-기타">${it.display}/${it.rawPurpose}</span>`
+            :`<span class="chip chip-${g.cls}">${it.display}</span>`
+          ).join('');
+          return`<div class="today-group"><span style="font-size:9px;font-weight:700;color:${clr};white-space:nowrap;padding-right:2px">${k}</span>${names}</div>`;
         }).join('');
-        return`<td><div class="chip-wrap">${chips}</div></td>`;
+        return`<td style="${bgStyle}"><div class="today-groups">${groupHtml}</div></td>`;
       }).join('');
       return`<tr><td class="region-td">${r}<div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rp.length}명</div></td>${cells}</tr>`;
     }).filter(Boolean);
