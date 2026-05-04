@@ -389,8 +389,7 @@ function renderMeetTables(){
   const wrap=document.getElementById('meetWrap');
   if(!people.length){wrap.innerHTML='<div style="padding:40px;text-align:center;color:var(--t3)">데이터가 없습니다</div>';return;}
   const tod=today(),d1=addDays(tod,1),d2=addDays(tod,2);
-  const DATE_COLS=[
-    {key:'today',label:'오늘',date:tod,isToday:true},
+  const OTHER_COLS=[
     {key:'d1',label:'내일',date:d1},
     {key:'d2',label:'모레',date:d2},
     {key:'after',label:'그이후',date:null},
@@ -404,19 +403,76 @@ function renderMeetTables(){
   const html=STAGES.map(stage=>{
     const sp=people.filter(p=>p.stage===stage);
     if(!sp.length)return'';
-    const colTots={today:0,d1:0,d2:0,after:0,none:0};
-    sp.forEach(p=>{const nd=p.nextDate;if(!nd||nd<tod)colTots.none++;else if(nd===tod)colTots.today++;else if(nd===d1)colTots.d1++;else if(nd===d2)colTots.d2++;else colTots.after++;});
-    const thCols=DATE_COLS.map(c=>`<th style="${c.isToday?'background:#fef9c3;color:#92400e':'background:var(--s2);color:var(--t2)'}">
-      <span style="display:block;font-weight:700;font-size:14px">${c.label}</span>
-      ${c.date?`<span style="font-size:11px;opacity:.8">${fmtDate(c.date)}(${getDow(c.date)})</span>`:''}
-    </th>`).join('');
+
+    // 오늘 목적 종류 수집 (이 stage 기준)
+    const todayPurSet=new Set();
+    sp.forEach(p=>{if(p.nextDate===tod)todayPurSet.add(normalizePurpose(p.purpose).label);});
+    const todayPurs=PURPOSE_ORDER.filter(k=>todayPurSet.has(k));
+    const TODAY_COLS=todayPurs.length
+      ?todayPurs.map(pur=>({key:'today-'+pur,label:pur,date:tod,isToday:true,purpose:pur}))
+      :[{key:'today',label:'오늘',date:tod,isToday:true}];
+    const DATE_COLS=[...TODAY_COLS,...OTHER_COLS];
+
+    // 컬럼별 합계
+    const colTots={d1:0,d2:0,after:0,none:0,today:0};
+    TODAY_COLS.forEach(c=>colTots[c.key]=0);
+    sp.forEach(p=>{
+      const nd=p.nextDate;
+      if(!nd||nd<tod){colTots.none++;}
+      else if(nd===tod){const k='today-'+normalizePurpose(p.purpose).label;if(colTots[k]!==undefined)colTots[k]++;else colTots.today++;}
+      else if(nd===d1){colTots.d1++;}
+      else if(nd===d2){colTots.d2++;}
+      else{colTots.after++;}
+    });
+
+    // 헤더: 2행 구조 — 1행(오늘 날짜 colspan + 나머지 rowspan), 2행(목적 sub-headers)
+    let theadHtml;
+    if(todayPurs.length>0){
+      const row1today=`<th colspan="${TODAY_COLS.length}" style="background:#fef9c3;color:#92400e;border-bottom:1px solid var(--acc-md)">
+        <span style="font-weight:700;font-size:14px">오늘</span>
+        <span style="font-size:11px;margin-left:5px;opacity:.75">${fmtDate(tod)}(${getDow(tod)})</span>
+      </th>`;
+      const row1others=OTHER_COLS.map(c=>`<th rowspan="2" style="background:var(--s2);color:var(--t2)">
+        <span style="display:block;font-weight:700;font-size:14px">${c.label}</span>
+        ${c.date?`<span style="font-size:11px;opacity:.8">${fmtDate(c.date)}(${getDow(c.date)})</span>`:''}
+      </th>`).join('');
+      const row2=TODAY_COLS.map(c=>{
+        const clr=c.purpose?PURPOSE_CLR[normalizePurpose(c.purpose).cls]||'#92400e':'#92400e';
+        return`<th style="background:#fffde7;color:${clr};font-size:12px;font-weight:700">${c.label}</th>`;
+      }).join('');
+      theadHtml=`<tr>
+        <th rowspan="2" style="background:#bde0f5;color:var(--t1)">지역</th>
+        ${row1today}${row1others}
+      </tr><tr>${row2}</tr>`;
+    }else{
+      const cols=[{key:'today',label:'오늘',date:tod,isToday:true},...OTHER_COLS].map(c=>`<th style="${c.isToday?'background:#fef9c3;color:#92400e':'background:var(--s2);color:var(--t2)'}">
+        <span style="display:block;font-weight:700;font-size:14px">${c.label}</span>
+        ${c.date?`<span style="font-size:11px;opacity:.8">${fmtDate(c.date)}(${getDow(c.date)})</span>`:''}
+      </th>`).join('');
+      theadHtml=`<tr><th style="background:#bde0f5;color:var(--t1)">지역</th>${cols}</tr>`;
+    }
+
     const regionRows=regions.map(r=>{
       const rp=sp.filter(p=>p.region===r);
       if(!rp.length)return'';
-      const buckets={today:[],d1:[],d2:[],after:[],none:[]};
-      rp.forEach(p=>{const nd=p.nextDate;if(!nd||nd<tod)buckets.none.push(p);else if(nd===tod)buckets.today.push(p);else if(nd===d1)buckets.d1.push(p);else if(nd===d2)buckets.d2.push(p);else buckets.after.push(p);});
+      const buckets={d1:[],d2:[],after:[],none:[],today:[]};
+      TODAY_COLS.forEach(c=>buckets[c.key]=[]);
+      rp.forEach(p=>{
+        const nd=p.nextDate;
+        if(!nd||nd<tod){buckets.none.push(p);}
+        else if(nd===tod){const k='today-'+normalizePurpose(p.purpose).label;if(buckets[k])buckets[k].push(p);else if(buckets.today)buckets.today.push(p);}
+        else if(nd===d1){buckets.d1.push(p);}
+        else if(nd===d2){buckets.d2.push(p);}
+        else{buckets.after.push(p);}
+      });
       const cells=DATE_COLS.map(c=>{
         const list=buckets[c.key]||[];
+        if(c.isToday){
+          if(!list.length)return`<td style="background:#fffde7"><span class="empty-dash">—</span></td>`;
+          const cls=c.purpose?normalizePurpose(c.purpose).cls:'기타';
+          const chips=list.map(p=>`<span class="chip chip-${cls}">${(p.people||'').split('-')[0]}</span>`).join('');
+          return`<td style="background:#fffde7"><div class="chip-wrap">${chips}</div></td>`;
+        }
         if(!list.length)return`<td><span class="empty-dash">—</span></td>`;
         const groups={};
         list.forEach(p=>{
@@ -430,7 +486,6 @@ function renderMeetTables(){
           }
           groups[norm.label].items.push({name,display,rawPurpose:p.purpose});
         });
-        const bgStyle=c.isToday?'background:#fffde7':'';
         const groupHtml=PURPOSE_ORDER.filter(k=>groups[k]).map(k=>{
           const g=groups[k];
           const clr=PURPOSE_CLR[g.cls]||'var(--t2)';
@@ -440,7 +495,7 @@ function renderMeetTables(){
           ).join('');
           return`<div class="today-group"><span style="font-size:9px;font-weight:700;color:${clr};white-space:nowrap;padding-right:2px">${k}</span>${names}</div>`;
         }).join('');
-        return`<td style="${bgStyle}"><div class="today-groups">${groupHtml}</div></td>`;
+        return`<td><div class="today-groups">${groupHtml}</div></td>`;
       }).join('');
       return`<tr><td class="region-td">${r}<div style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">${rp.length}명</div></td>${cells}</tr>`;
     }).filter(Boolean);
@@ -461,7 +516,7 @@ function renderMeetTables(){
       </div>
       <div class="table-wrap" style="border-radius:0 0 10px 10px;border-top:none">
         <table class="meet-table">
-          <thead><tr><th style="background:#bde0f5;color:var(--t1)">지역</th>${thCols}</tr></thead>
+          <thead>${theadHtml}</thead>
           <tbody>
             ${regionRows.join('')}
             <tr class="total-row"><td class="region-td">합계</td>${totCells}</tr>
