@@ -407,7 +407,7 @@ function renderMeetTables(){
           const name=(p.people||'').split('-')[0];
           if(c.key==='after'&&p.nextDate){
             const dt=new Date(p.nextDate+'T00:00:00');
-            const dateStr=`${dt.getMonth()+1}/${dt.getDate()}(${['일','월','화','수','목','금','토'][dt.getDay()]})`;
+            const dateStr=`${dt.getMonth()+1}.${dt.getDate()}(${['일','월','화','수','목','금','토'][dt.getDay()]})`;
             return`<span class="chip chip-${p.purpose}">${name}/${p.purpose}/${dateStr}</span>`;
           }
           return`<span class="chip chip-${p.purpose}">${name}/${p.purpose}</span>`;
